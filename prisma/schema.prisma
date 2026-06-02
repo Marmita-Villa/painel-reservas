@@ -1,0 +1,168 @@
+generator client {
+  provider        = "prisma-client-js"
+  previewFeatures = ["driverAdapters"]
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model Restaurant {
+  id           String   @id @default(cuid())
+  name         String
+  slug         String   @unique
+  phone        String?
+  email        String?
+  address      String?
+  logoUrl      String?
+  timezone     String   @default("America/Sao_Paulo")
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  rooms           Room[]
+  customers       Customer[]
+  reservations    Reservation[]
+  waitlistEntries WaitlistEntry[]
+  settings        RestaurantSettings?
+}
+
+model RestaurantSettings {
+  id                  String     @id @default(cuid())
+  restaurantId        String     @unique
+  restaurant          Restaurant @relation(fields: [restaurantId], references: [id])
+  maxAdvanceDays      Int        @default(30)
+  minNoticeMinutes    Int        @default(60)
+  defaultSlotDuration Int        @default(90)
+  noShowFeeEnabled    Boolean    @default(false)
+  noShowFeeAmount     Float?
+  autoConfirm         Boolean    @default(true)
+  reminderHoursBefore Int        @default(24)
+  whatsappEnabled     Boolean    @default(false)
+  whatsappApiKey      String?
+}
+
+model Room {
+  id           String     @id @default(cuid())
+  restaurantId String
+  restaurant   Restaurant @relation(fields: [restaurantId], references: [id])
+  name         String
+  description  String?
+  isActive     Boolean    @default(true)
+  createdAt    DateTime   @default(now())
+
+  tables    Table[]
+  schedules Schedule[]
+}
+
+model Table {
+  id          String  @id @default(cuid())
+  roomId      String
+  room        Room    @relation(fields: [roomId], references: [id])
+  name        String
+  capacity    Int
+  minCapacity Int     @default(1)
+  posX        Float   @default(0)
+  posY        Float   @default(0)
+  shape       String  @default("rectangle")
+  isActive    Boolean @default(true)
+
+  reservations Reservation[]
+}
+
+model Schedule {
+  id           String  @id @default(cuid())
+  roomId       String
+  room         Room    @relation(fields: [roomId], references: [id])
+  dayOfWeek    Int
+  openTime     String
+  closeTime    String
+  slotInterval Int     @default(30)
+  maxCapacity  Int
+  isActive     Boolean @default(true)
+  isOnline     Boolean @default(true)
+}
+
+model Customer {
+  id           String     @id @default(cuid())
+  restaurantId String
+  restaurant   Restaurant @relation(fields: [restaurantId], references: [id])
+  name         String
+  phone        String?
+  email        String?
+  birthday     DateTime?
+  notes        String?
+  tags         String[]
+  visitCount   Int        @default(0)
+  noShowCount  Int        @default(0)
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+
+  reservations    Reservation[]
+  waitlistEntries WaitlistEntry[]
+
+  @@unique([restaurantId, phone])
+}
+
+model Reservation {
+  id           String            @id @default(cuid())
+  restaurantId String
+  restaurant   Restaurant        @relation(fields: [restaurantId], references: [id])
+  customerId   String?
+  customer     Customer?         @relation(fields: [customerId], references: [id])
+  tableId      String?
+  table        Table?            @relation(fields: [tableId], references: [id])
+  date         DateTime
+  partySize    Int
+  duration     Int               @default(90)
+  status       ReservationStatus @default(CONFIRMED)
+  origin       ReservationOrigin @default(INTERNAL)
+  notes        String?
+  occasion     String?
+  noShowFee    Float?
+  createdAt    DateTime          @default(now())
+  updatedAt    DateTime          @updatedAt
+}
+
+model WaitlistEntry {
+  id            String         @id @default(cuid())
+  restaurantId  String
+  restaurant    Restaurant     @relation(fields: [restaurantId], references: [id])
+  customerId    String?
+  customer      Customer?      @relation(fields: [customerId], references: [id])
+  name          String
+  phone         String
+  partySize     Int
+  status        WaitlistStatus @default(WAITING)
+  estimatedWait Int?
+  notes         String?
+  createdAt     DateTime       @default(now())
+  calledAt      DateTime?
+  seatedAt      DateTime?
+}
+
+enum ReservationStatus {
+  PENDING
+  CONFIRMED
+  ARRIVED
+  SEATED
+  COMPLETED
+  CANCELLED
+  NO_SHOW
+}
+
+enum ReservationOrigin {
+  INTERNAL
+  WIDGET
+  GOOGLE
+  INSTAGRAM
+  WHATSAPP
+  PHONE
+}
+
+enum WaitlistStatus {
+  WAITING
+  CALLED
+  SEATED
+  CANCELLED
+  NO_SHOW
+}
