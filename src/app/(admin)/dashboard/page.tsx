@@ -9,6 +9,7 @@ import {
 } from "lucide-react";
 import { prisma } from "@/lib/prisma";
 import { formatTime } from "@/lib/utils";
+import AutoRefresh from "@/components/admin/AutoRefresh";
 
 const RESTAURANT_ID = process.env.NEXT_PUBLIC_RESTAURANT_ID!;
 
@@ -95,6 +96,7 @@ export default async function DashboardPage() {
 
   return (
     <div className="space-y-6">
+      <AutoRefresh intervalMs={30000} />
       <div>
         <h1 className="text-2xl font-bold" style={{ color: "var(--foreground)" }}>
           Dashboard
