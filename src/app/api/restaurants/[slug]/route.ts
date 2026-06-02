@@ -4,11 +4,13 @@ import { prisma } from "@/lib/prisma";
 // GET /api/restaurants/:slug — public endpoint for widget
 export async function GET(
   _req: NextRequest,
-  { params }: { params: { slug: string } }
+  { params }: { params: Promise<{ slug: string }> }
 ) {
   try {
+    const { slug } = await params;
+
     const restaurant = await prisma.restaurant.findUnique({
-      where: { slug: params.slug },
+      where: { slug },
       include: {
         settings: true,
         rooms: {

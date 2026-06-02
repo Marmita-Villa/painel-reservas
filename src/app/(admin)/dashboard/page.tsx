@@ -213,7 +213,7 @@ export default async function DashboardPage() {
                       </td>
                       <td className="px-5 py-3">
                         <div className="flex items-center gap-1.5">
-                          <StatusIcon size={14} style={{ color: s.color } as React.CSSProperties} />
+                          <span style={{ color: s.color }}><StatusIcon size={14} /></span>
                           <span className="text-xs font-medium" style={{ color: s.color }}>{s.label}</span>
                         </div>
                       </td>

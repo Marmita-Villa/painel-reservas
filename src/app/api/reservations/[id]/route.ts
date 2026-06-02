@@ -4,14 +4,15 @@ import { prisma } from "@/lib/prisma";
 // PATCH /api/reservations/:id  — update status
 export async function PATCH(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     const body = await req.json();
     const { status, tableId } = body;
 
     const reservation = await prisma.reservation.update({
-      where: { id: params.id },
+      where: { id },
       data: {
         ...(status && { status }),
         ...(tableId && { tableId }),
@@ -29,10 +30,11 @@ export async function PATCH(
 // DELETE /api/reservations/:id
 export async function DELETE(
   _req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    await prisma.reservation.delete({ where: { id: params.id } });
+    const { id } = await params;
+    await prisma.reservation.delete({ where: { id } });
     return NextResponse.json({ ok: true });
   } catch (error) {
     console.error("DELETE /api/reservations/:id error:", error);
