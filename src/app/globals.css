@@ -1,18 +1,29 @@
 @import "tailwindcss";
 
 :root {
-  --background: #0f1117;
-  --surface: #1a1d27;
-  --surface-2: #252836;
-  --border: #2e3244;
-  --foreground: #e8eaf0;
-  --foreground-muted: #8b90a7;
-  --primary: #6c63ff;
-  --primary-hover: #7c74ff;
-  --success: #22c55e;
-  --warning: #f59e0b;
-  --danger: #ef4444;
-  --info: #3b82f6;
+  --background:       #09090b;
+  --surface:          #111113;
+  --surface-2:        #18181b;
+  --surface-3:        #1f1f23;
+  --border:           #27272a;
+  --border-subtle:    #1f1f23;
+  --foreground:       #fafafa;
+  --foreground-muted: #71717a;
+  --foreground-dim:   #3f3f46;
+  --primary:          #e4c97e;
+  --primary-hover:    #f0d898;
+  --primary-fg:       #09090b;
+  --success:          #4ade80;
+  --success-bg:       #052e16;
+  --warning:          #fb923c;
+  --warning-bg:       #431407;
+  --danger:           #f87171;
+  --danger-bg:        #450a0a;
+  --info:             #60a5fa;
+  --info-bg:          #0c1a35;
+  --radius:           10px;
+  --radius-lg:        14px;
+  --radius-xl:        18px;
 }
 
 @theme inline {
@@ -22,31 +33,38 @@
   --font-mono: var(--font-geist-mono);
 }
 
-* {
-  box-sizing: border-box;
-}
+* { box-sizing: border-box; }
+
+html { height: 100%; }
 
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: var(--font-geist-sans), Arial, sans-serif;
+  font-family: var(--font-geist-sans), -apple-system, sans-serif;
   -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
-::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
-}
+/* Scrollbar */
+::-webkit-scrollbar { width: 5px; height: 5px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: 99px; }
+::-webkit-scrollbar-thumb:hover { background: var(--foreground-dim); }
 
-::-webkit-scrollbar-track {
-  background: var(--surface);
+/* Input & Select reset */
+input, select, textarea {
+  background: var(--surface-2);
+  color: var(--foreground);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  outline: none;
+  transition: border-color 0.15s;
 }
-
-::-webkit-scrollbar-thumb {
-  background: var(--border);
-  border-radius: 3px;
+input:focus, select:focus, textarea:focus {
+  border-color: var(--primary);
 }
-
-::-webkit-scrollbar-thumb:hover {
-  background: var(--foreground-muted);
+input[type="date"]::-webkit-calendar-picker-indicator {
+  filter: invert(0.5);
+  cursor: pointer;
 }
+select option { background: var(--surface-2); }
