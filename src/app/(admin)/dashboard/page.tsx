@@ -20,10 +20,18 @@ const originLabel: Record<string, string> = {
   WHATSAPP: "WhatsApp", INSTAGRAM: "Instagram", PHONE: "Telefone",
 };
 
+function todaySaoPaulo() {
+  return new Intl.DateTimeFormat("en-CA", { timeZone: "America/Sao_Paulo" }).format(new Date());
+}
+
+function spDate(dateStr: string, time: string) {
+  return new Date(`${dateStr}T${time}:00-03:00`);
+}
+
 async function getData() {
-  const today = new Date();
-  const start = new Date(today); start.setHours(0, 0, 0, 0);
-  const end   = new Date(today); end.setHours(23, 59, 59, 999);
+  const todayStr = todaySaoPaulo();
+  const start = spDate(todayStr, "00:00");
+  const end   = spDate(todayStr, "23:59");
 
   const [reservations, waitlist] = await Promise.all([
     prisma.reservation.findMany({
