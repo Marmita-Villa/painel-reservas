@@ -20,6 +20,14 @@ export function formatTime(date: Date | string) {
   }).format(new Date(date));
 }
 
+export function formatName(name: string) {
+  return name
+    .toLowerCase()
+    .split(" ")
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(" ");
+}
+
 export function formatPhone(phone: string) {
   const digits = phone.replace(/\D/g, "");
   if (digits.length === 11) {

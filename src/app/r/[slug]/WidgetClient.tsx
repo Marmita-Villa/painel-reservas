@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { CalendarDays, Clock, Users, ChevronLeft, ChevronRight, Check, MapPin, Phone, User, MessageSquare, Sparkles, ArrowRight } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { cn, formatName } from "@/lib/utils";
 
 interface Restaurant {
   id: string;
@@ -287,7 +287,7 @@ export default function WidgetClient({ restaurant }: { restaurant: Restaurant })
                   {/* Fields */}
                   <div className="space-y-4">
                     {[
-                      { label:"Nome completo *", placeholder:"Seu nome", value:name, onChange:(v:string)=>setName(v), icon:User, type:"text" },
+                      { label:"Nome completo *", placeholder:"Seu nome", value:name, onChange:(v:string)=>setName(formatName(v)), icon:User, type:"text" },
                       { label:"WhatsApp / Telefone *", placeholder:"(11) 99999-9999", value:phone, onChange:(v:string)=>setPhone(v), icon:Phone, type:"tel" },
                     ].map(f => (
                       <div key={f.label}>

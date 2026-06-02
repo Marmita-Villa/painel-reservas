@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { formatName } from "@/lib/utils";
 
 // São Paulo is UTC-3
 const TZ_OFFSET = -3;
@@ -50,9 +51,17 @@ export async function POST(req: NextRequest) {
     // Upsert customer by phone
     let customer = await prisma.customer.findFirst({ where: { restaurantId, phone } });
 
+    const formattedName = formatName(name);
+
     if (!customer) {
       customer = await prisma.customer.create({
-        data: { restaurantId, name, phone },
+        data: { restaurantId, name: formattedName, phone },
+      });
+    } else {
+      // Update name formatting if needed
+      await prisma.customer.update({
+        where: { id: customer.id },
+        data: { name: formattedName },
       });
     }
 
