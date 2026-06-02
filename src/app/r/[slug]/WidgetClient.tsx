@@ -18,6 +18,7 @@ import {
 import { cn } from "@/lib/utils";
 
 interface Restaurant {
+  id: string;
   slug: string;
   name: string;
   description: string;
@@ -587,7 +588,7 @@ export default function WidgetClient({ restaurant }: { restaurant: Restaurant })
                           method: "POST",
                           headers: { "Content-Type": "application/json" },
                           body: JSON.stringify({
-                            restaurantId: process.env.NEXT_PUBLIC_RESTAURANT_ID,
+                            restaurantId: restaurant.id,
                             name,
                             phone,
                             date: selectedDate,

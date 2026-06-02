@@ -1,7 +1,21 @@
 import WidgetClient from "./WidgetClient";
 
-// Mock restaurant data — later fetched from DB by slug
-const mockRestaurant = {
+const RESTAURANT_ID = process.env.NEXT_PUBLIC_RESTAURANT_ID ?? "cmpwr87ok0000y0vm4bw1s7l6";
+
+function generateSlots() {
+  const slots = [];
+  const times = ["12:00", "12:30", "13:00", "19:00", "19:30", "20:00", "20:30", "21:00"];
+  for (let i = 0; i < 14; i++) {
+    const d = new Date();
+    d.setDate(d.getDate() + i);
+    const dateStr = d.toISOString().split("T")[0];
+    slots.push({ date: dateStr, times });
+  }
+  return slots;
+}
+
+const restaurant = {
+  id: RESTAURANT_ID,
   slug: "ristorante-roma",
   name: "Ristorante Roma",
   description: "Culinária italiana autêntica no coração de São Paulo",
@@ -10,16 +24,9 @@ const mockRestaurant = {
   logoUrl: null,
   primaryColor: "#6c63ff",
   phone: "(11) 99999-9999",
-  availableSlots: [
-    { date: "2026-06-02", times: ["12:00", "12:30", "13:00", "19:00", "19:30", "20:00", "20:30", "21:00"] },
-    { date: "2026-06-03", times: ["12:00", "12:30", "13:00", "13:30", "19:00", "19:30", "20:00", "21:00"] },
-    { date: "2026-06-04", times: ["12:00", "13:00", "19:30", "20:00", "20:30"] },
-    { date: "2026-06-05", times: ["12:00", "12:30", "13:00", "19:00", "19:30", "20:00", "20:30", "21:00", "21:30"] },
-    { date: "2026-06-06", times: ["12:00", "13:00", "19:00", "20:00", "21:00"] },
-    { date: "2026-06-07", times: ["12:00", "12:30", "13:00", "13:30", "19:00", "19:30", "20:00", "20:30"] },
-  ],
+  availableSlots: generateSlots(),
 };
 
-export default function WidgetPage({ params }: { params: { slug: string } }) {
-  return <WidgetClient restaurant={mockRestaurant} />;
+export default function WidgetPage() {
+  return <WidgetClient restaurant={restaurant} />;
 }
