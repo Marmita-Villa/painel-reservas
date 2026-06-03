@@ -2,23 +2,30 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { LayoutDashboard, CalendarDays, Users, Clock, Map, BarChart3, Settings, PanelLeftClose, PanelLeftOpen } from "lucide-react";
+import { LayoutDashboard, CalendarDays, Users, Clock, Map, BarChart3, Settings, PanelLeftClose, PanelLeftOpen, UserCog, Store } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useState } from "react";
+import { useSession } from "next-auth/react";
 
-const navItems = [
-  { href: "/dashboard",     label: "Dashboard",      icon: LayoutDashboard },
-  { href: "/reservas",      label: "Reservas",       icon: CalendarDays },
-  { href: "/fila",          label: "Fila de Espera", icon: Clock },
-  { href: "/mesas",         label: "Mesas",          icon: Map },
-  { href: "/clientes",      label: "Clientes",       icon: Users },
-  { href: "/relatorios",    label: "Relatórios",     icon: BarChart3 },
-  { href: "/configuracoes", label: "Configurações",  icon: Settings },
+const allNavItems = [
+  { href: "/dashboard",     label: "Dashboard",      icon: LayoutDashboard, roles: ["MASTER_SUPER", "ADMIN", "GERENTE", "USUARIO"] },
+  { href: "/reservas",      label: "Reservas",       icon: CalendarDays,    roles: ["MASTER_SUPER", "ADMIN", "GERENTE", "USUARIO"] },
+  { href: "/fila",          label: "Fila de Espera", icon: Clock,           roles: ["MASTER_SUPER", "ADMIN", "GERENTE", "USUARIO"] },
+  { href: "/mesas",         label: "Mesas",          icon: Map,             roles: ["MASTER_SUPER", "ADMIN", "GERENTE"] },
+  { href: "/clientes",      label: "Clientes",       icon: Users,           roles: ["MASTER_SUPER", "ADMIN", "GERENTE"] },
+  { href: "/relatorios",    label: "Relatórios",     icon: BarChart3,       roles: ["MASTER_SUPER", "ADMIN", "GERENTE"] },
+  { href: "/configuracoes", label: "Configurações",  icon: Settings,        roles: ["MASTER_SUPER", "ADMIN"] },
+  { href: "/usuarios",      label: "Usuários",       icon: UserCog,         roles: ["MASTER_SUPER", "ADMIN"] },
+  { href: "/restaurantes",  label: "Restaurantes",   icon: Store,           roles: ["MASTER_SUPER"] },
 ];
 
 export default function Sidebar() {
   const pathname = usePathname();
   const [collapsed, setCollapsed] = useState(false);
+  const { data: session } = useSession();
+  const role = (session?.user as any)?.role ?? "USUARIO";
+
+  const navItems = allNavItems.filter(item => item.roles.includes(role));
 
   return (
     <aside

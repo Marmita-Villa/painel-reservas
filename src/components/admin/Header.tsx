@@ -5,10 +5,20 @@ import { useReserva } from "./ReservaProvider";
 import { signOut, useSession } from "next-auth/react";
 import { useState } from "react";
 
+const roleBadge: Record<string, { label: string; bg: string }> = {
+  MASTER_SUPER: { label: "Master",  bg: "#7c3aed" },
+  ADMIN:        { label: "Admin",   bg: "#2563eb" },
+  GERENTE:      { label: "Gerente", bg: "#16a34a" },
+  USUARIO:      { label: "Usuário", bg: "#71717a" },
+};
+
 export default function Header() {
   const { openModal } = useReserva();
   const { data: session } = useSession();
   const [menuOpen, setMenuOpen] = useState(false);
+
+  const role = (session?.user as any)?.role ?? "USUARIO";
+  const badge = roleBadge[role] ?? roleBadge.USUARIO;
 
   const initials = session?.user?.name
     ?.split(" ").map((n) => n[0]).slice(0, 2).join("").toUpperCase() ?? "?";
@@ -58,9 +68,15 @@ export default function Header() {
               style={{ background: "var(--primary)", color: "#fff" }}>
               {initials}
             </div>
-            <span className="text-sm font-medium hidden sm:block" style={{ color: "var(--foreground)" }}>
-              {session?.user?.name?.split(" ")[0] ?? "Usuário"}
-            </span>
+            <div className="hidden sm:flex items-center gap-1.5">
+              <span className="text-sm font-medium" style={{ color: "var(--foreground)" }}>
+                {session?.user?.name?.split(" ")[0] ?? "Usuário"}
+              </span>
+              <span className="text-xs px-1.5 py-0.5 rounded-md font-semibold"
+                style={{ background: badge.bg, color: "#fff" }}>
+                {badge.label}
+              </span>
+            </div>
             <ChevronDown size={13} style={{ color: "var(--foreground-dim)" }} />
           </button>
 

@@ -2,8 +2,7 @@ import { CalendarDays, Users, Clock, TrendingUp, CheckCircle2, XCircle, AlertCir
 import { prisma } from "@/lib/prisma";
 import { formatTime } from "@/lib/utils";
 import AutoRefresh from "@/components/admin/AutoRefresh";
-
-const RESTAURANT_ID = process.env.NEXT_PUBLIC_RESTAURANT_ID!;
+import { auth } from "@/lib/auth";
 
 const statusConfig: Record<string, { label: string; color: string; bg: string }> = {
   CONFIRMED: { label: "Confirmado", color: "var(--info)",    bg: "var(--info-bg)" },
@@ -28,19 +27,19 @@ function spDate(dateStr: string, time: string) {
   return new Date(`${dateStr}T${time}:00-03:00`);
 }
 
-async function getData() {
+async function getData(restaurantId: string) {
   const todayStr = todaySaoPaulo();
   const start = spDate(todayStr, "00:00");
   const end   = spDate(todayStr, "23:59");
 
   const [reservations, waitlist] = await Promise.all([
     prisma.reservation.findMany({
-      where: { restaurantId: RESTAURANT_ID, date: { gte: start, lte: end } },
+      where: { restaurantId, date: { gte: start, lte: end } },
       include: { customer: true, table: true },
       orderBy: { date: "asc" },
     }),
     prisma.waitlistEntry.findMany({
-      where: { restaurantId: RESTAURANT_ID, status: { in: ["WAITING", "CALLED"] } },
+      where: { restaurantId, status: { in: ["WAITING", "CALLED"] } },
     }),
   ]);
 
@@ -52,7 +51,9 @@ async function getData() {
 }
 
 export default async function DashboardPage() {
-  const { reservations, waitlist, totalPeople } = await getData();
+  const session = await auth();
+  const RESTAURANT_ID = (session?.user as any)?.restaurantId ?? process.env.NEXT_PUBLIC_RESTAURANT_ID!;
+  const { reservations, waitlist, totalPeople } = await getData(RESTAURANT_ID);
   const confirmed = reservations.filter(r => r.status === "CONFIRMED").length;
   const occupied  = Math.round((totalPeople / 120) * 100);
 

@@ -12,8 +12,10 @@ model User {
   name         String
   email        String     @unique
   password     String
-  role         String     @default("ADMIN")
+  role         UserRole   @default(ADMIN)
+  isActive     Boolean    @default(true)
   restaurantId String?
+  restaurant   Restaurant? @relation(fields: [restaurantId], references: [id])
   createdAt    DateTime   @default(now())
 }
 
@@ -26,9 +28,11 @@ model Restaurant {
   address      String?
   logoUrl      String?
   timezone     String   @default("America/Sao_Paulo")
+  isActive     Boolean  @default(true)
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 
+  users           User[]
   rooms           Room[]
   customers       Customer[]
   reservations    Reservation[]
@@ -148,6 +152,13 @@ model WaitlistEntry {
   createdAt     DateTime       @default(now())
   calledAt      DateTime?
   seatedAt      DateTime?
+}
+
+enum UserRole {
+  MASTER_SUPER
+  ADMIN
+  GERENTE
+  USUARIO
 }
 
 enum ReservationStatus {
