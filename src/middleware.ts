@@ -1,18 +1,35 @@
-import { auth } from "@/lib/auth";
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 
-export default auth((req) => {
-  const isLoggedIn   = !!req.auth;
-  const isLoginPage  = req.nextUrl.pathname === "/login";
-  const isPublic     = req.nextUrl.pathname.startsWith("/r/") ||
-                       req.nextUrl.pathname.startsWith("/api/");
+const PUBLIC_PATHS = ["/r/", "/api/", "/_next/", "/favicon"];
+const AUTH_PAGES   = ["/login"];
 
-  if (isPublic) return NextResponse.next();
-  if (isLoginPage && isLoggedIn) return NextResponse.redirect(new URL("/dashboard", req.url));
-  if (!isLoginPage && !isLoggedIn) return NextResponse.redirect(new URL("/login", req.url));
+export async function middleware(req: NextRequest) {
+  const { pathname } = req.nextUrl;
+
+  // Sempre deixar passar rotas públicas
+  if (PUBLIC_PATHS.some((p) => pathname.startsWith(p))) {
+    return NextResponse.next();
+  }
+
+  // Verificar se tem cookie de sessão do NextAuth
+  const sessionToken =
+    req.cookies.get("authjs.session-token")?.value ||
+    req.cookies.get("__Secure-authjs.session-token")?.value ||
+    req.cookies.get("next-auth.session-token")?.value;
+
+  const isLoggedIn  = !!sessionToken;
+  const isLoginPage = AUTH_PAGES.includes(pathname);
+
+  if (isLoginPage && isLoggedIn) {
+    return NextResponse.redirect(new URL("/dashboard", req.url));
+  }
+
+  if (!isLoginPage && !isLoggedIn) {
+    return NextResponse.redirect(new URL("/login", req.url));
+  }
 
   return NextResponse.next();
-});
+}
 
 export const config = {
   matcher: ["/((?!_next/static|_next/image|favicon.ico).*)"],
