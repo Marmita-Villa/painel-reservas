@@ -34,11 +34,17 @@ export default function Sidebar() {
       style={{ background: "var(--surface)", borderColor: "var(--border)" }}
     >
       {/* Logo */}
-      <div className="flex items-center justify-center px-4 h-16 border-b" style={{ borderColor: "var(--border)" }}>
-        {collapsed
-          ? <Logo size="xs" variant="icon" />
-          : <Logo size="sm" variant="full" />
-        }
+      <div className="flex items-center justify-center border-b flex-shrink-0"
+        style={{ borderColor: "var(--border)", background: "#0f1729", height: collapsed ? "64px" : "80px", padding: collapsed ? "12px 8px" : "10px 12px" }}>
+        {collapsed ? (
+          <div style={{ width: 36, height: 36, borderRadius: 8, overflow: "hidden", display: "flex", alignItems: "center", justifyContent: "center" }}>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src="/logo.png" alt="R360" style={{ width: 72, height: 72, objectFit: "cover", objectPosition: "center top", marginTop: "-4px" }} />
+          </div>
+        ) : (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img src="/logo.png" alt="Reserva360" style={{ width: "100%", height: "100%", objectFit: "contain" }} />
+        )}
       </div>
 
       {/* Nav */}

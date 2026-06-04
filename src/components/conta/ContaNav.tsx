@@ -37,8 +37,8 @@ export default function ContaNav({ slug }: ContaNavProps) {
     <nav style={{ background: C.bg, borderBottom: `1px solid ${C.bdr}`, fontFamily: "system-ui, sans-serif" }}>
       <div style={{ maxWidth: 700, margin: "0 auto", padding: "0 1rem" }}>
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "0.5rem", overflowX: "auto" }}>
-          <Link href={`/r/${slug}`} style={{ display: "flex", alignItems: "center", textDecoration: "none", padding: "0.5rem 0", flexShrink: 0 }}>
-            <Logo size="sm" variant="full" />
+          <Link href={`/r/${slug}`} style={{ display: "flex", alignItems: "center", textDecoration: "none", padding: "0.4rem 0.5rem", borderRadius: "0.5rem", background: "#0f1729", flexShrink: 0 }}>
+            <img src="/logo.png" alt="Reserva360" style={{ height: 36, objectFit: "contain" }} />
           </Link>
 
           <div style={{ display: "flex", alignItems: "center", gap: "0.25rem" }}>
