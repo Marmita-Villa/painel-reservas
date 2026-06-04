@@ -1,7 +1,18 @@
 "use client";
 
 import { useState } from "react";
-import { BarChart3, TrendingUp, TrendingDown, Users, CalendarDays, Clock, AlertCircle } from "lucide-react";
+import { BarChart3, TrendingUp, TrendingDown, CalendarDays, Clock, AlertCircle, Download, X, FileDown } from "lucide-react";
+import { useRestaurant } from "@/contexts/RestaurantContext";
+
+const statusOptions = [
+  { value: "", label: "Todos os status" },
+  { value: "CONFIRMED", label: "Confirmado" },
+  { value: "COMPLETED", label: "Concluído" },
+  { value: "CANCELLED", label: "Cancelado" },
+  { value: "NO_SHOW", label: "No-Show" },
+  { value: "ARRIVED", label: "Chegou" },
+  { value: "SEATED", label: "Sentado" },
+];
 
 type Period = "7d" | "30d" | "3m";
 
@@ -72,9 +83,41 @@ export default function RelatoriosClient({
   initialData: ReportData;
   initialPeriod: Period;
 }) {
+  const { effectiveRestaurantId } = useRestaurant();
   const [period, setPeriod] = useState<Period>(initialPeriod);
   const [data, setData] = useState<ReportData>(initialData);
   const [loading, setLoading] = useState(false);
+  const [showExportModal, setShowExportModal] = useState(false);
+  const [exportDateFrom, setExportDateFrom] = useState("");
+  const [exportDateTo, setExportDateTo] = useState("");
+  const [exportStatus, setExportStatus] = useState("");
+  const [exporting, setExporting] = useState(false);
+
+  async function handleExport() {
+    if (!effectiveRestaurantId) return;
+    setExporting(true);
+    try {
+      const params = new URLSearchParams({ restaurantId: effectiveRestaurantId });
+      if (exportDateFrom) params.set("dateFrom", exportDateFrom);
+      if (exportDateTo) params.set("dateTo", exportDateTo);
+      if (exportStatus) params.set("status", exportStatus);
+
+      const res = await fetch(`/api/reservations/export?${params.toString()}`);
+      if (!res.ok) throw new Error("Export failed");
+
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `reservas-${new Date().toISOString().split("T")[0]}.csv`;
+      a.click();
+      URL.revokeObjectURL(url);
+      setShowExportModal(false);
+    } catch (err) {
+      console.error("Export error:", err);
+    }
+    setExporting(false);
+  }
 
   async function changePeriod(p: Period) {
     if (p === period) return;
@@ -98,13 +141,23 @@ export default function RelatoriosClient({
 
   return (
     <div className="space-y-6" style={{ opacity: loading ? 0.6 : 1, transition: "opacity 0.2s" }}>
-      <div>
-        <h1 className="text-2xl font-bold" style={{ color: "var(--foreground)" }}>
-          Relatórios
-        </h1>
-        <p className="text-sm mt-1" style={{ color: "var(--foreground-muted)" }}>
-          Análise de desempenho do restaurante
-        </p>
+      <div className="flex items-start justify-between">
+        <div>
+          <h1 className="text-2xl font-bold" style={{ color: "var(--foreground)" }}>
+            Relatórios
+          </h1>
+          <p className="text-sm mt-1" style={{ color: "var(--foreground-muted)" }}>
+            Análise de desempenho do restaurante
+          </p>
+        </div>
+        <button
+          onClick={() => setShowExportModal(true)}
+          className="flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-medium text-white transition-opacity hover:opacity-90"
+          style={{ background: "var(--primary)" }}
+        >
+          <Download size={15} />
+          Exportar CSV
+        </button>
       </div>
 
       {/* Period selector */}
@@ -275,6 +328,99 @@ export default function RelatoriosClient({
           </div>
         )}
       </div>
+
+      {/* Export CSV Modal */}
+      {showExportModal && (
+        <>
+          <div
+            className="fixed inset-0 z-40"
+            style={{ background: "rgba(0,0,0,0.5)" }}
+            onClick={() => setShowExportModal(false)}
+          />
+          <div
+            className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-50 w-full max-w-md rounded-2xl p-6 space-y-5"
+            style={{ background: "var(--surface)", border: "1px solid var(--border)" }}
+          >
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <FileDown size={18} style={{ color: "var(--primary)" }} />
+                <h3 className="font-semibold" style={{ color: "var(--foreground)" }}>Exportar Reservas (CSV)</h3>
+              </div>
+              <button
+                onClick={() => setShowExportModal(false)}
+                className="p-1 rounded-lg transition-opacity hover:opacity-70"
+                style={{ color: "var(--foreground-muted)" }}
+              >
+                <X size={16} />
+              </button>
+            </div>
+
+            <div className="space-y-4">
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs mb-1.5" style={{ color: "var(--foreground-muted)" }}>
+                    Data inicial
+                  </label>
+                  <input
+                    type="date"
+                    value={exportDateFrom}
+                    onChange={(e) => setExportDateFrom(e.target.value)}
+                    className="w-full px-3 py-2 rounded-lg text-sm outline-none"
+                    style={{ background: "var(--surface-2)", border: "1px solid var(--border)", color: "var(--foreground)" }}
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs mb-1.5" style={{ color: "var(--foreground-muted)" }}>
+                    Data final
+                  </label>
+                  <input
+                    type="date"
+                    value={exportDateTo}
+                    onChange={(e) => setExportDateTo(e.target.value)}
+                    className="w-full px-3 py-2 rounded-lg text-sm outline-none"
+                    style={{ background: "var(--surface-2)", border: "1px solid var(--border)", color: "var(--foreground)" }}
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-xs mb-1.5" style={{ color: "var(--foreground-muted)" }}>
+                  Status
+                </label>
+                <select
+                  value={exportStatus}
+                  onChange={(e) => setExportStatus(e.target.value)}
+                  className="w-full px-3 py-2 rounded-lg text-sm outline-none"
+                  style={{ background: "var(--surface-2)", border: "1px solid var(--border)", color: "var(--foreground)" }}
+                >
+                  {statusOptions.map((opt) => (
+                    <option key={opt.value} value={opt.value}>{opt.label}</option>
+                  ))}
+                </select>
+              </div>
+            </div>
+
+            <div className="flex gap-3">
+              <button
+                onClick={() => setShowExportModal(false)}
+                className="flex-1 py-2.5 rounded-lg text-sm font-medium transition-opacity hover:opacity-70"
+                style={{ background: "var(--surface-2)", color: "var(--foreground-muted)", border: "1px solid var(--border)" }}
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={handleExport}
+                disabled={exporting}
+                className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-lg text-sm font-medium text-white disabled:opacity-60 transition-opacity hover:opacity-90"
+                style={{ background: "var(--primary)" }}
+              >
+                <Download size={14} />
+                {exporting ? "Exportando..." : "Exportar"}
+              </button>
+            </div>
+          </div>
+        </>
+      )}
     </div>
   );
 }

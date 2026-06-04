@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { ReservationStatus } from '@prisma/client';
 import { prisma } from '@/lib/prisma';
-import { sendReminder24h, sendReminder2h } from '@/lib/notifications';
+import { sendReminder24h, sendReminder2h, sendPostVisitFeedback } from '@/lib/notifications';
 
 export async function POST(req: NextRequest) {
   const authHeader = req.headers.get('authorization');
@@ -21,10 +21,14 @@ export async function POST(req: NextRequest) {
   const reminder2hFrom = new Date(now.getTime() + 90  * 60 * 1000);
   const reminder2hTo   = new Date(now.getTime() + 150 * 60 * 1000);
 
+  // Post-visit window: COMPLETED reservations between 1h50m and 2h10m ago
+  const postVisitFrom = new Date(now.getTime() - 130 * 60 * 1000);
+  const postVisitTo   = new Date(now.getTime() - 110 * 60 * 1000);
+
   const activeStatuses: ReservationStatus[] = [ReservationStatus.CONFIRMED, ReservationStatus.PENDING];
 
-  // Fetch both batches in parallel
-  const [pending24h, pending2h] = await Promise.all([
+  // Fetch all batches in parallel
+  const [pending24h, pending2h, pendingPostVisit] = await Promise.all([
     prisma.reservation.findMany({
       where: {
         status: { in: activeStatuses },
@@ -44,10 +48,19 @@ export async function POST(req: NextRequest) {
       },
       include: { customer: true, restaurant: true },
     }),
+    prisma.reservation.findMany({
+      where: {
+        status: ReservationStatus.COMPLETED,
+        date: { gte: postVisitFrom, lte: postVisitTo },
+        postVisitSentAt: null,
+      },
+      include: { customer: true, restaurant: true },
+    }),
   ]);
 
   let sent24h = 0;
   let sent2h = 0;
+  let sentPostVisit = 0;
 
   // Send 24h reminders
   for (const r of pending24h) {
@@ -61,6 +74,9 @@ export async function POST(req: NextRequest) {
         partySize: r.partySize,
         confirmToken: r.confirmToken,
         cancelToken: r.cancelToken,
+        restaurantId: r.restaurantId,
+        customerId: r.customerId ?? undefined,
+        reservationId: r.id,
       });
       if (ok) {
         await prisma.reservation.update({
@@ -85,6 +101,9 @@ export async function POST(req: NextRequest) {
         date: r.date,
         partySize: r.partySize,
         cancelToken: r.cancelToken,
+        restaurantId: r.restaurantId,
+        customerId: r.customerId ?? undefined,
+        reservationId: r.id,
       });
       if (ok) {
         await prisma.reservation.update({
@@ -98,12 +117,38 @@ export async function POST(req: NextRequest) {
     }
   }
 
+  // Send post-visit feedback
+  for (const r of pendingPostVisit) {
+    if (!r.customer?.phone) continue;
+    try {
+      const ok = await sendPostVisitFeedback({
+        phone: r.customer.phone,
+        customerName: r.customer.name,
+        restaurantName: r.restaurant.name,
+        restaurantId: r.restaurantId,
+        customerId: r.customerId ?? undefined,
+        reservationId: r.id,
+      });
+      if (ok) {
+        await prisma.reservation.update({
+          where: { id: r.id },
+          data: { postVisitSentAt: new Date() },
+        });
+        sentPostVisit++;
+      }
+    } catch (err) {
+      console.error(`[Cron] Post-visit feedback failed for reservation ${r.id}:`, err);
+    }
+  }
+
   return NextResponse.json({
     ok: true,
     sent24h,
     sent2h,
+    sentPostVisit,
     checked24h: pending24h.length,
     checked2h: pending2h.length,
+    checkedPostVisit: pendingPostVisit.length,
     timestamp: now.toISOString(),
   });
 }

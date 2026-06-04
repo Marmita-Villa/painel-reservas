@@ -1,9 +1,11 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { Settings, Clock, Bell, CreditCard, Globe, Check, AlertCircle, Loader2 } from "lucide-react";
+import { useState, useEffect, useRef } from "react";
+import { Settings, Clock, Bell, CreditCard, Globe, Check, AlertCircle, Loader2, QrCode, Copy } from "lucide-react";
 import { useSession } from "next-auth/react";
 import { useRestaurant } from "@/contexts/RestaurantContext";
+
+const BASE_URL = process.env.NEXT_PUBLIC_URL ?? (typeof window !== "undefined" ? window.location.origin : "https://painel-reservas.onrender.com");
 
 const tabs = [
   { id: "geral", label: "Geral", icon: Settings },
@@ -11,6 +13,7 @@ const tabs = [
   { id: "notificacoes", label: "Notificações", icon: Bell },
   { id: "pagamento", label: "Pagamento / No-Show", icon: CreditCard },
   { id: "integracoes", label: "Integrações", icon: Globe },
+  { id: "widget", label: "Widget & QR", icon: QrCode },
 ];
 
 const days = ["Domingo", "Segunda", "Terça", "Quarta", "Quinta", "Sexta", "Sábado"];
@@ -30,7 +33,17 @@ export default function ConfiguracoesPage() {
   const [phone, setPhone] = useState("");
   const [email, setEmail] = useState("");
   const [address, setAddress] = useState("");
+  const [slug, setSlug] = useState("");
   const [loadingGeral, setLoadingGeral] = useState(false);
+
+  // Pagamento fields
+  const [averageTicket, setAverageTicket] = useState<string>("");
+
+  // Widget
+  const [copied, setCopied] = useState(false);
+  const widgetUrl = slug ? `${BASE_URL}/r/${slug}` : "";
+  const qrUrl = widgetUrl ? `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(widgetUrl)}` : "";
+  const embedCode = widgetUrl ? `<iframe src="${widgetUrl}" width="100%" height="700" frameborder="0" style="border-radius:12px;"></iframe>` : "";
 
   // Load restaurant data when tab is active or restaurantId changes
   useEffect(() => {
@@ -44,6 +57,7 @@ export default function ConfiguracoesPage() {
           setPhone(data.phone ?? "");
           setEmail(data.email ?? "");
           setAddress(data.address ?? "");
+          setSlug(data.slug ?? "");
         }
       })
       .catch(() => {})
@@ -71,6 +85,23 @@ export default function ConfiguracoesPage() {
       setSaveState("error");
       setTimeout(() => setSaveState("idle"), 3000);
     }
+  }
+
+  function handleCopyUrl() {
+    if (!widgetUrl) return;
+    navigator.clipboard.writeText(widgetUrl).then(() => {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    });
+  }
+
+  function handleDownloadQr() {
+    if (!qrUrl) return;
+    const a = document.createElement("a");
+    a.href = qrUrl;
+    a.download = `qrcode-${slug}.png`;
+    a.target = "_blank";
+    a.click();
   }
 
   return (
@@ -310,6 +341,22 @@ export default function ConfiguracoesPage() {
                   <option>48 horas antes</option>
                 </select>
               </div>
+              <div>
+                <label className="block text-sm mb-1.5" style={{ color: "var(--foreground-muted)" }}>
+                  Ticket médio por pessoa (R$)
+                </label>
+                <input
+                  type="number"
+                  placeholder="Ex: 85.00"
+                  value={averageTicket}
+                  onChange={(e) => setAverageTicket(e.target.value)}
+                  className="w-40 px-3 py-2.5 rounded-lg text-sm outline-none"
+                  style={{ background: "var(--surface-2)", border: "1px solid var(--border)", color: "var(--foreground)" }}
+                />
+                <p className="text-xs mt-1" style={{ color: "var(--foreground-muted)" }}>
+                  Usado para calcular a receita estimada no dashboard
+                </p>
+              </div>
               <button
                 className="px-5 py-2.5 rounded-lg text-sm font-medium text-white"
                 style={{ background: "var(--primary)" }}
@@ -351,6 +398,105 @@ export default function ConfiguracoesPage() {
                   </button>
                 </div>
               ))}
+            </div>
+          )}
+
+          {activeTab === "widget" && (
+            <div
+              className="rounded-xl border p-6 space-y-6"
+              style={{ background: "var(--surface)", borderColor: "var(--border)" }}
+            >
+              <h2 className="font-semibold" style={{ color: "var(--foreground)" }}>Widget de Reservas & QR Code</h2>
+
+              {/* Widget URL */}
+              <div>
+                <label className="block text-sm font-medium mb-2" style={{ color: "var(--foreground-muted)" }}>
+                  URL do Widget Público
+                </label>
+                <div className="flex items-center gap-2">
+                  <input
+                    type="text"
+                    readOnly
+                    value={widgetUrl || (loadingGeral ? "Carregando..." : "Configure o slug do restaurante")}
+                    className="flex-1 px-3 py-2.5 rounded-lg text-sm outline-none font-mono"
+                    style={{ background: "var(--surface-2)", border: "1px solid var(--border)", color: "var(--foreground)" }}
+                  />
+                  <button
+                    onClick={handleCopyUrl}
+                    disabled={!widgetUrl}
+                    className="flex items-center gap-1.5 px-4 py-2.5 rounded-lg text-sm font-medium transition-opacity hover:opacity-80 disabled:opacity-40"
+                    style={{ background: copied ? "var(--success)20" : "var(--surface-2)", color: copied ? "var(--success)" : "var(--foreground-muted)", border: "1px solid var(--border)" }}
+                  >
+                    {copied ? <><Check size={13} /> Copiado!</> : <><Copy size={13} /> Copiar</>}
+                  </button>
+                  {widgetUrl && (
+                    <a
+                      href={widgetUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center gap-1.5 px-4 py-2.5 rounded-lg text-sm font-medium text-white transition-opacity hover:opacity-80"
+                      style={{ background: "var(--primary)" }}
+                    >
+                      Abrir
+                    </a>
+                  )}
+                </div>
+              </div>
+
+              {/* QR Code */}
+              {widgetUrl && (
+                <div>
+                  <label className="block text-sm font-medium mb-3" style={{ color: "var(--foreground-muted)" }}>
+                    QR Code
+                  </label>
+                  <div className="flex items-start gap-6">
+                    <div
+                      className="p-3 rounded-xl border"
+                      style={{ background: "white", borderColor: "var(--border)" }}
+                    >
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img
+                        src={qrUrl}
+                        alt="QR Code do Widget"
+                        width={200}
+                        height={200}
+                        style={{ display: "block" }}
+                      />
+                    </div>
+                    <div className="space-y-3 pt-2">
+                      <p className="text-sm" style={{ color: "var(--foreground-muted)" }}>
+                        Imprima este QR Code e disponibilize nas mesas ou na entrada para que os clientes façam reservas diretamente pelo celular.
+                      </p>
+                      <button
+                        onClick={handleDownloadQr}
+                        className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-opacity hover:opacity-80"
+                        style={{ background: "var(--surface-2)", color: "var(--foreground)", border: "1px solid var(--border)" }}
+                      >
+                        Baixar QR Code
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Embed code */}
+              {widgetUrl && (
+                <div>
+                  <label className="block text-sm font-medium mb-2" style={{ color: "var(--foreground-muted)" }}>
+                    Código de Incorporação (iFrame)
+                  </label>
+                  <p className="text-xs mb-2" style={{ color: "var(--foreground-muted)" }}>
+                    Cole este código no seu site para exibir o widget de reservas diretamente.
+                  </p>
+                  <textarea
+                    readOnly
+                    value={embedCode}
+                    rows={3}
+                    className="w-full px-3 py-2.5 rounded-lg text-xs outline-none font-mono resize-none"
+                    style={{ background: "var(--surface-2)", border: "1px solid var(--border)", color: "var(--foreground)" }}
+                  />
+                </div>
+              )}
             </div>
           )}
         </div>

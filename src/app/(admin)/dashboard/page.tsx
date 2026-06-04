@@ -1,6 +1,6 @@
 "use client";
 
-import { CalendarDays, Users, Clock, TrendingUp, ArrowUpRight } from "lucide-react";
+import { CalendarDays, Users, Clock, TrendingUp, ArrowUpRight, DollarSign } from "lucide-react";
 import { formatTime } from "@/lib/utils";
 import { useRestaurant } from "@/contexts/RestaurantContext";
 import { useEffect, useState, useCallback } from "react";
@@ -32,10 +32,14 @@ interface Reservation {
 
 interface WaitlistEntry { id: string; }
 
+interface BirthdayGuest { id: string | null; name: string; }
+
 interface DashboardData {
   reservations: Reservation[];
   waitlist: WaitlistEntry[];
   totalPeople: number;
+  birthdayGuests?: BirthdayGuest[];
+  estimatedRevenue?: number;
 }
 
 export default function DashboardPage() {
@@ -66,6 +70,8 @@ export default function DashboardPage() {
   const reservations = data?.reservations ?? [];
   const waitlist = data?.waitlist ?? [];
   const totalPeople = data?.totalPeople ?? 0;
+  const birthdayGuests = data?.birthdayGuests ?? [];
+  const estimatedRevenue = data?.estimatedRevenue ?? 0;
   const confirmed = reservations.filter(r => r.status === "CONFIRMED").length;
   const occupied  = Math.round((totalPeople / 120) * 100);
 
@@ -90,13 +96,41 @@ export default function DashboardPage() {
         <div className="text-sm py-4" style={{ color: "var(--foreground-muted)" }}>Carregando...</div>
       )}
 
+      {/* Birthday alert */}
+      {birthdayGuests.length > 0 && (
+        <div
+          className="flex items-center gap-3 px-5 py-4 rounded-xl border"
+          style={{ background: "var(--warning)15", borderColor: "var(--warning)40" }}
+        >
+          <span className="text-xl">🎂</span>
+          <div>
+            <span className="text-sm font-semibold" style={{ color: "var(--warning)" }}>
+              Aniversariantes hoje:{" "}
+            </span>
+            {birthdayGuests.map((g, i) => (
+              <span key={g.id ?? i}>
+                {i > 0 && <span style={{ color: "var(--foreground-muted)" }}>, </span>}
+                <a
+                  href="/clientes"
+                  className="text-sm font-medium underline-offset-2 hover:underline"
+                  style={{ color: "var(--warning)" }}
+                >
+                  {g.name}
+                </a>
+              </span>
+            ))}
+          </div>
+        </div>
+      )}
+
       {/* KPIs */}
-      <div className="grid grid-cols-2 xl:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 xl:grid-cols-5 gap-4">
         {[
           { label: "Reservas Hoje",     value: reservations.length, sub: `${confirmed} confirmadas`,        icon: CalendarDays, accent: "var(--primary)" },
           { label: "Pessoas Esperadas", value: totalPeople,          sub: "Capacidade total: 120",           icon: Users,        accent: "var(--info)" },
           { label: "Na Fila Agora",     value: waitlist.length,      sub: waitlist.length ? "~30 min" : "Fila vazia", icon: Clock, accent: "var(--warning)" },
           { label: "Ocupação",          value: `${occupied}%`,       sub: `${120 - totalPeople} lugares livres`, icon: TrendingUp, accent: "var(--success)" },
+          { label: "Receita Estimada",  value: estimatedRevenue > 0 ? `R$ ${estimatedRevenue.toLocaleString("pt-BR", { minimumFractionDigits: 0, maximumFractionDigits: 0 })}` : "—", sub: "Ticket médio configurado", icon: DollarSign, accent: "#10b981" },
         ].map((kpi) => {
           const Icon = kpi.icon;
           return (

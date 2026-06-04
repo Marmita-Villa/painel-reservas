@@ -32,12 +32,13 @@ model Restaurant {
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 
-  users           User[]
-  rooms           Room[]
-  customers       Customer[]
-  reservations    Reservation[]
-  waitlistEntries WaitlistEntry[]
-  settings        RestaurantSettings?
+  users             User[]
+  rooms             Room[]
+  customers         Customer[]
+  reservations      Reservation[]
+  waitlistEntries   WaitlistEntry[]
+  settings          RestaurantSettings?
+  notificationLogs  NotificationLog[]
 }
 
 model RestaurantSettings {
@@ -53,6 +54,7 @@ model RestaurantSettings {
   reminderHoursBefore Int        @default(24)
   whatsappEnabled     Boolean    @default(false)
   whatsappApiKey      String?
+  averageTicket       Float?     @default(0)
 }
 
 model Room {
@@ -108,11 +110,18 @@ model Customer {
   tags         String[]
   visitCount   Int        @default(0)
   noShowCount  Int        @default(0)
+  isBlacklisted   Boolean  @default(false)
+  blacklistReason String?
+  allergies       String?
+  preferences     String?
+  favoriteTable   String?
+  internalNotes   String?
   createdAt    DateTime   @default(now())
   updatedAt    DateTime   @updatedAt
 
-  reservations    Reservation[]
-  waitlistEntries WaitlistEntry[]
+  reservations      Reservation[]
+  waitlistEntries   WaitlistEntry[]
+  notificationLogs  NotificationLog[]
 
   @@unique([restaurantId, phone])
 }
@@ -137,6 +146,7 @@ model Reservation {
   cancelToken       String?           @unique
   reminder24hSentAt DateTime?
   reminder2hSentAt  DateTime?
+  postVisitSentAt   DateTime?
   createdAt         DateTime          @default(now())
   updatedAt         DateTime          @updatedAt
 }
@@ -190,4 +200,18 @@ enum WaitlistStatus {
   SEATED
   CANCELLED
   NO_SHOW
+}
+
+model NotificationLog {
+  id             String      @id @default(cuid())
+  restaurantId   String
+  restaurant     Restaurant  @relation(fields: [restaurantId], references: [id])
+  customerId     String?
+  customer       Customer?   @relation(fields: [customerId], references: [id])
+  reservationId  String?
+  type           String
+  phone          String
+  message        String
+  success        Boolean
+  sentAt         DateTime    @default(now())
 }
