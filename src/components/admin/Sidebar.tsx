@@ -40,8 +40,8 @@ export default function Sidebar() {
         </div>
         {!collapsed && (
           <div>
-            <p className="text-sm font-bold leading-none" style={{ color: "var(--foreground)" }}>Reservas Pro</p>
-            <p className="text-xs mt-0.5" style={{ color: "var(--foreground-dim)" }}>Gestão de Mesas</p>
+            <p className="text-sm font-bold leading-none" style={{ color: "var(--foreground)" }}>Reserva360</p>
+            <p className="text-xs mt-0.5" style={{ color: "var(--foreground-dim)" }}>Sua Reserva. Nossa Solução.</p>
           </div>
         )}
       </div>

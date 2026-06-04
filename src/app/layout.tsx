@@ -13,12 +13,12 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Painel de Reservas",
-  description: "Sistema de gestão de reservas para restaurantes",
+  title: "Reserva360",
+  description: "Reserva360 — Sua Reserva. Nossa Solução.",
 };
 
 export const viewport = {
-  themeColor: "#c9a84c",
+  themeColor: "#f07316",
   width: "device-width",
   initialScale: 1,
 };

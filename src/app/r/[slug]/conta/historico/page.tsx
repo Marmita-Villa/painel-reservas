@@ -11,7 +11,7 @@ const C = {
   bdr: "#e4e4e7",
   fg: "#18181b",
   muted: "#71717a",
-  gold: "#c9a84c",
+  gold: "#f07316",
 };
 
 const STATUS_LABELS: Record<string, { label: string; color: string; bg: string }> = {

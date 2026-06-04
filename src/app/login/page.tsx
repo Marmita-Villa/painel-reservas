@@ -39,10 +39,10 @@ export default function LoginPage() {
             <CalendarDays size={28} color="#fff" />
           </div>
           <h1 className="text-2xl font-bold tracking-tight" style={{ color: "var(--foreground)" }}>
-            Reservas Pro
+            Reserva360
           </h1>
           <p className="text-sm mt-1" style={{ color: "var(--foreground-muted)" }}>
-            Acesse o painel do seu restaurante
+            Sua Reserva. Nossa Solução.
           </p>
         </div>
 
@@ -94,7 +94,7 @@ export default function LoginPage() {
         </div>
 
         <p className="text-xs text-center mt-6" style={{ color: "var(--foreground-dim)" }}>
-          Reservas Pro · Sistema de gestão de reservas
+          Reserva360 · Sistema de gestão de reservas
         </p>
       </div>
     </div>

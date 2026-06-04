@@ -11,9 +11,9 @@ const C = {
   bdr:   "#e4e4e7",
   fg:    "#18181b",
   muted: "#71717a",
-  gold:  "#c9a84c",
-  goldL: "#fdf8ee",
-  goldB: "#f0e8c8",
+  gold:  "#f07316",
+  goldL: "#fff7ed",
+  goldB: "#fed7aa",
 };
 
 interface Props {

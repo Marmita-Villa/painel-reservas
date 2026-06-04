@@ -34,9 +34,9 @@ const C = {
   fg:    "#18181b",
   muted: "#71717a",
   dim:   "#a1a1aa",
-  gold:  "#c9a84c",
-  goldL: "#fdf8ee",
-  goldB: "#f0e8c8",
+  gold:  "#f07316",
+  goldL: "#fff7ed",
+  goldB: "#fed7aa",
 };
 
 export default function WidgetClient({ restaurant }: { restaurant: Restaurant }) {
