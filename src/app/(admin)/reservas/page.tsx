@@ -175,7 +175,7 @@ export default function ReservasPage() {
                     </td>
                     <td className="px-5 py-3">
                       {r.confirmToken && (
-                        <MessageCircle size={14} title="WhatsApp enviado" style={{ color: "#25d366" }} />
+                        <MessageCircle size={14} aria-label="WhatsApp enviado" style={{ color: "#25d366" }} />
                       )}
                     </td>
                   </tr>
