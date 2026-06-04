@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { Settings, Clock, Bell, CreditCard, Globe, Check, AlertCircle, Loader2 } from "lucide-react";
 import { useSession } from "next-auth/react";
+import { useRestaurant } from "@/contexts/RestaurantContext";
 
 const tabs = [
   { id: "geral", label: "Geral", icon: Settings },
@@ -18,7 +19,8 @@ type SaveState = "idle" | "saving" | "success" | "error";
 
 export default function ConfiguracoesPage() {
   const { data: session } = useSession();
-  const restaurantId = (session?.user as any)?.restaurantId as string | undefined;
+  const { effectiveRestaurantId } = useRestaurant();
+  const restaurantId = effectiveRestaurantId ?? (session?.user as any)?.restaurantId as string | undefined;
 
   const [activeTab, setActiveTab] = useState("geral");
   const [saveState, setSaveState] = useState<SaveState>("idle");
@@ -30,9 +32,9 @@ export default function ConfiguracoesPage() {
   const [address, setAddress] = useState("");
   const [loadingGeral, setLoadingGeral] = useState(false);
 
-  // Load restaurant data when tab is active and restaurantId available
+  // Load restaurant data when tab is active or restaurantId changes
   useEffect(() => {
-    if (activeTab !== "geral" || !restaurantId) return;
+    if (!restaurantId) return;
     setLoadingGeral(true);
     fetch(`/api/restaurants/${restaurantId}`)
       .then((r) => r.json())
