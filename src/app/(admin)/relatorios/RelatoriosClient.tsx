@@ -1,7 +1,7 @@
 "use client";
 
-import { useState } from "react";
-import { BarChart3, TrendingUp, TrendingDown, CalendarDays, Clock, AlertCircle, Download, X, FileDown } from "lucide-react";
+import { useState, useEffect } from "react";
+import { BarChart3, TrendingUp, TrendingDown, CalendarDays, Clock, AlertCircle, Download, X, FileDown, Telescope } from "lucide-react";
 import { useRestaurant } from "@/contexts/RestaurantContext";
 
 const statusOptions = [
@@ -58,6 +58,22 @@ interface ReportData {
   recentNoShows: NoShowEntry[];
 }
 
+interface ForecastEntry {
+  date: string;
+  dayOfWeek: number;
+  dayName: string;
+  predictedCount: number;
+  predictedOccupancy: number;
+  confidence: "high" | "medium" | "low";
+  weeksWithData: number;
+}
+
+interface ForecastData {
+  forecast: ForecastEntry[];
+  totalCapacity: number;
+  hasData: boolean;
+}
+
 const ORIGIN_COLORS: Record<string, string> = {
   WIDGET: "var(--primary)",
   INTERNAL: "var(--info)",
@@ -92,6 +108,18 @@ export default function RelatoriosClient({
   const [exportDateTo, setExportDateTo] = useState("");
   const [exportStatus, setExportStatus] = useState("");
   const [exporting, setExporting] = useState(false);
+  const [forecast, setForecast] = useState<ForecastData | null>(null);
+  const [forecastLoading, setForecastLoading] = useState(false);
+
+  useEffect(() => {
+    if (!effectiveRestaurantId) return;
+    setForecastLoading(true);
+    fetch(`/api/reports/forecast?restaurantId=${effectiveRestaurantId}`)
+      .then((r) => (r.ok ? r.json() : null))
+      .then((data) => setForecast(data))
+      .catch(() => setForecast(null))
+      .finally(() => setForecastLoading(false));
+  }, [effectiveRestaurantId]);
 
   async function handleExport() {
     if (!effectiveRestaurantId) return;
@@ -325,6 +353,133 @@ export default function RelatoriosClient({
                 <span className="text-xs" style={{ color: "var(--foreground-muted)" }}>{ns.date}</span>
               </div>
             ))}
+          </div>
+        )}
+      </div>
+
+      {/* Forecast 14 days */}
+      <div
+        className="rounded-xl border p-5"
+        style={{ background: "var(--surface)", borderColor: "var(--border)" }}
+      >
+        <h3 className="font-semibold mb-4 flex items-center gap-2" style={{ color: "var(--foreground)" }}>
+          <Telescope size={16} style={{ color: "var(--primary)" }} />
+          Previsão 14 dias
+        </h3>
+
+        {forecastLoading ? (
+          <p className="text-sm text-center py-6" style={{ color: "var(--foreground-muted)" }}>
+            Calculando previsão...
+          </p>
+        ) : !forecast || !forecast.hasData ? (
+          <div className="text-center py-8 space-y-2">
+            <p className="text-sm font-medium" style={{ color: "var(--foreground)" }}>
+              Dados insuficientes
+            </p>
+            <p className="text-xs" style={{ color: "var(--foreground-muted)" }}>
+              A previsão estará disponível após o registro de reservas históricas. Continue usando o sistema e os dados serão coletados automaticamente.
+            </p>
+          </div>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm border-collapse">
+              <thead>
+                <tr style={{ borderBottom: "1px solid var(--border)" }}>
+                  {["Data", "Dia", "Prev. Reservas", "Ocupação", "", "Confiança"].map((h) => (
+                    <th
+                      key={h}
+                      className="text-left py-2 px-3 text-xs font-semibold uppercase tracking-wide"
+                      style={{ color: "var(--foreground-muted)" }}
+                    >
+                      {h}
+                    </th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {forecast.forecast.map((row) => {
+                  const occ = row.predictedOccupancy;
+                  const occColor =
+                    occ >= 70 ? "#ef4444" : occ >= 40 ? "#f59e0b" : "#22c55e";
+                  const occBg =
+                    occ >= 70 ? "#ef444418" : occ >= 40 ? "#f59e0b18" : "#22c55e18";
+
+                  const confColor =
+                    row.confidence === "high"
+                      ? "#22c55e"
+                      : row.confidence === "medium"
+                      ? "#f59e0b"
+                      : "#6b7280";
+                  const confBg =
+                    row.confidence === "high"
+                      ? "#22c55e18"
+                      : row.confidence === "medium"
+                      ? "#f59e0b18"
+                      : "#6b728018";
+                  const confLabel =
+                    row.confidence === "high"
+                      ? "Alta"
+                      : row.confidence === "medium"
+                      ? "Média"
+                      : "Baixa";
+
+                  const dateObj = new Date(row.date + "T12:00:00");
+                  const dateFormatted = dateObj.toLocaleDateString("pt-BR", {
+                    day: "2-digit",
+                    month: "2-digit",
+                  });
+
+                  return (
+                    <tr
+                      key={row.date}
+                      style={{ borderBottom: "1px solid var(--border)" }}
+                      className="hover:bg-[var(--surface-2)] transition-colors"
+                    >
+                      <td className="py-2.5 px-3" style={{ color: "var(--foreground)" }}>
+                        {dateFormatted}
+                      </td>
+                      <td className="py-2.5 px-3" style={{ color: "var(--foreground-muted)" }}>
+                        {row.dayName}
+                      </td>
+                      <td className="py-2.5 px-3 font-medium" style={{ color: "var(--foreground)" }}>
+                        {row.predictedCount}
+                      </td>
+                      <td className="py-2.5 px-3">
+                        <span
+                          className="font-semibold text-xs px-2 py-0.5 rounded-full"
+                          style={{ background: occBg, color: occColor }}
+                        >
+                          {occ}%
+                        </span>
+                      </td>
+                      <td className="py-2.5 px-3 w-40">
+                        <div
+                          className="h-2 rounded-full overflow-hidden"
+                          style={{ background: "var(--surface-2)" }}
+                        >
+                          <div
+                            className="h-full rounded-full transition-all"
+                            style={{ width: `${Math.min(occ, 100)}%`, background: occColor }}
+                          />
+                        </div>
+                      </td>
+                      <td className="py-2.5 px-3">
+                        <span
+                          className="text-xs font-semibold px-2 py-0.5 rounded-full"
+                          style={{ background: confBg, color: confColor }}
+                        >
+                          {confLabel}
+                        </span>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+            <p className="text-xs mt-3" style={{ color: "var(--foreground-muted)" }}>
+              Previsão baseada nas últimas 8 semanas de dados históricos. Capacidade total:{" "}
+              <strong style={{ color: "var(--foreground)" }}>{forecast.totalCapacity} lugares</strong>.
+            </p>
           </div>
         )}
       </div>
