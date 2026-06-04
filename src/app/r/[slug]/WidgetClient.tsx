@@ -48,12 +48,29 @@ export default function WidgetClient({ restaurant }: { restaurant: Restaurant })
   const [phone,        setPhone]        = useState("");
   const [notes,        setNotes]        = useState("");
   const [occasion,     setOccasion]     = useState("");
-  const [weekOffset,   setWeekOffset]   = useState(0);
   const [loading,      setLoading]      = useState(false);
+  const [calMonth,     setCalMonth]     = useState(() => { const d = new Date(); return new Date(d.getFullYear(), d.getMonth(), 1); });
 
   const today = new Date();
-  const weekDays = Array.from({length:7},(_,i)=>{ const d=new Date(today); d.setDate(today.getDate()+weekOffset*7+i); return d.toISOString().split("T")[0]; });
-  const availMap   = new Map(restaurant.availableSlots.map(s=>[s.date,s.times]));
+  const todayStr = today.toISOString().split("T")[0];
+  const availMap = new Map(restaurant.availableSlots.map(s=>[s.date,s.times]));
+
+  // Calendar grid: 6 weeks starting from first day of calMonth
+  const calDays = (() => {
+    const year = calMonth.getFullYear();
+    const month = calMonth.getMonth();
+    const firstDay = new Date(year, month, 1).getDay(); // 0=Sun
+    const daysInMonth = new Date(year, month+1, 0).getDate();
+    const cells: (string|null)[] = [];
+    for (let i=0; i<firstDay; i++) cells.push(null);
+    for (let d=1; d<=daysInMonth; d++) {
+      cells.push(`${year}-${String(month+1).padStart(2,"0")}-${String(d).padStart(2,"0")}`);
+    }
+    while (cells.length % 7 !== 0) cells.push(null);
+    return cells;
+  })();
+
+  const maxMonth = (() => { const d = new Date(); d.setDate(1); d.setMonth(d.getMonth()+2); return d; })();
   const timesForDate = selectedDate ? (availMap.get(selectedDate)||[]) : [];
   const lunchTimes  = timesForDate.filter(t=>parseInt(t)<17);
   const dinnerTimes = timesForDate.filter(t=>parseInt(t)>=17);
@@ -135,43 +152,85 @@ export default function WidgetClient({ restaurant }: { restaurant: Restaurant })
             <div className="p-8">
               {/* ── DATA ── */}
               {step==="data" && (
-                <div className="space-y-6">
+                <div className="space-y-5">
                   <div>
                     <h2 className="text-xl font-bold tracking-tight" style={{color:C.fg}}>Qual data?</h2>
                     <p className="text-sm mt-1" style={{color:C.muted}}>Selecione o dia da sua visita</p>
                   </div>
+
+                  {/* Month navigation */}
                   <div className="flex items-center justify-between">
-                    <button onClick={()=>setWeekOffset(w=>Math.max(0,w-1))} disabled={weekOffset===0}
-                      className="w-9 h-9 rounded-lg flex items-center justify-center border disabled:opacity-30 hover:bg-gray-50"
+                    <button
+                      onClick={()=>setCalMonth(m=>new Date(m.getFullYear(),m.getMonth()-1,1))}
+                      disabled={calMonth.getFullYear()===today.getFullYear()&&calMonth.getMonth()===today.getMonth()}
+                      className="w-9 h-9 rounded-xl flex items-center justify-center border transition-all hover:bg-gray-50 disabled:opacity-30"
                       style={{borderColor:C.bdr,color:C.muted}}>
                       <ChevronLeft size={16}/>
                     </button>
-                    <span className="text-sm font-medium" style={{color:C.muted}}>
-                      {weekOffset===0?"Esta semana":`Próxima semana +${weekOffset}`}
+                    <span className="text-sm font-semibold" style={{color:C.fg}}>
+                      {monthNames[calMonth.getMonth()]} {calMonth.getFullYear()}
                     </span>
-                    <button onClick={()=>setWeekOffset(w=>w+1)}
-                      className="w-9 h-9 rounded-lg flex items-center justify-center border hover:bg-gray-50"
+                    <button
+                      onClick={()=>setCalMonth(m=>new Date(m.getFullYear(),m.getMonth()+1,1))}
+                      disabled={calMonth>=maxMonth}
+                      className="w-9 h-9 rounded-xl flex items-center justify-center border transition-all hover:bg-gray-50 disabled:opacity-30"
                       style={{borderColor:C.bdr,color:C.muted}}>
                       <ChevronRight size={16}/>
                     </button>
                   </div>
-                  <div className="grid grid-cols-7 gap-2">
-                    {weekDays.map(dateStr=>{
-                      const fmt=fmtDate(dateStr);
-                      const hasSlots=availMap.has(dateStr);
-                      const isPast=new Date(dateStr)<new Date(today.toISOString().split("T")[0]);
-                      const isSel=selectedDate===dateStr;
+
+                  {/* Day headers */}
+                  <div className="grid grid-cols-7 gap-1">
+                    {dayNames.map(d=>(
+                      <div key={d} className="text-center text-xs font-semibold py-1" style={{color:C.dim}}>{d}</div>
+                    ))}
+
+                    {/* Calendar cells */}
+                    {calDays.map((dateStr,i)=>{
+                      if (!dateStr) return <div key={`empty-${i}`}/>;
+                      const hasSlots = availMap.has(dateStr);
+                      const slotCount = availMap.get(dateStr)?.length ?? 0;
+                      const isPast = dateStr < todayStr;
+                      const isToday = dateStr === todayStr;
+                      const isSel = selectedDate === dateStr;
+                      const isDisabled = isPast || !hasSlots;
+                      // availability: many slots = green dot, few (<=2) = amber, none = no dot
+                      const dotColor = slotCount > 2 ? "#16a34a" : slotCount > 0 ? C.gold : "transparent";
+
                       return (
-                        <button key={dateStr} disabled={!hasSlots||isPast}
+                        <button key={dateStr}
+                          disabled={isDisabled}
                           onClick={()=>{setSelectedDate(dateStr);setSelectedTime("");setStep("hora");}}
-                          className="flex flex-col items-center py-3.5 rounded-xl transition-all disabled:opacity-25 disabled:cursor-not-allowed active:scale-95 border"
-                          style={{background:isSel?C.gold:C.sur,borderColor:isSel?C.gold:C.bdr}}>
-                          <span className="text-xs mb-1" style={{color:isSel?"#fff":C.dim}}>{fmt.dayName}</span>
-                          <span className="text-lg font-bold" style={{color:isSel?"#fff":C.fg}}>{fmt.day}</span>
-                          {hasSlots&&!isPast&&<div className="w-1 h-1 rounded-full mt-1.5" style={{background:isSel?"#fff":C.gold}}/>}
+                          className="relative flex flex-col items-center justify-center rounded-xl transition-all active:scale-95 disabled:cursor-not-allowed"
+                          style={{
+                            height:"52px",
+                            background: isSel ? C.gold : isToday ? C.goldL : "transparent",
+                            border: isToday && !isSel ? `2px solid ${C.gold}` : isSel ? `2px solid ${C.gold}` : "2px solid transparent",
+                            opacity: isDisabled ? 0.25 : 1,
+                          }}>
+                          <span className="text-sm font-semibold leading-none" style={{color:isSel?"#fff":C.fg}}>
+                            {parseInt(dateStr.split("-")[2])}
+                          </span>
+                          {/* Availability dot */}
+                          {!isPast && (
+                            <div className="w-1.5 h-1.5 rounded-full mt-1"
+                              style={{background:isSel?"rgba(255,255,255,0.8)":dotColor}}/>
+                          )}
                         </button>
                       );
                     })}
+                  </div>
+
+                  {/* Legend */}
+                  <div className="flex items-center gap-4 pt-1">
+                    <div className="flex items-center gap-1.5">
+                      <div className="w-2 h-2 rounded-full" style={{background:"#16a34a"}}/>
+                      <span className="text-xs" style={{color:C.muted}}>Disponível</span>
+                    </div>
+                    <div className="flex items-center gap-1.5">
+                      <div className="w-2 h-2 rounded-full" style={{background:C.gold}}/>
+                      <span className="text-xs" style={{color:C.muted}}>Poucos horários</span>
+                    </div>
                   </div>
                 </div>
               )}
