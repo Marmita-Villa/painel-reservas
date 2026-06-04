@@ -3,7 +3,8 @@
 import { useState } from "react";
 import { signIn } from "next-auth/react";
 import { useRouter } from "next/navigation";
-import { Eye, EyeOff, LogIn, CalendarDays } from "lucide-react";
+import { Eye, EyeOff, LogIn } from "lucide-react";
+import Image from "next/image";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -34,16 +35,7 @@ export default function LoginPage() {
 
         {/* Logo */}
         <div className="text-center mb-8">
-          <div className="w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-md"
-            style={{ background: "var(--primary)" }}>
-            <CalendarDays size={28} color="#fff" />
-          </div>
-          <h1 className="text-2xl font-bold tracking-tight" style={{ color: "var(--foreground)" }}>
-            Reserva360
-          </h1>
-          <p className="text-sm mt-1" style={{ color: "var(--foreground-muted)" }}>
-            Sua Reserva. Nossa Solução.
-          </p>
+          <Image src="/logo.png" alt="Reserva360" width={220} height={70} style={{ objectFit: "contain", margin: "0 auto 8px" }} priority />
         </div>
 
         {/* Card */}

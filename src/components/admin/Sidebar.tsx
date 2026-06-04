@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { LayoutDashboard, CalendarDays, Users, Clock, Map, BarChart3, Settings, PanelLeftClose, PanelLeftOpen, UserCog, Store } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -33,16 +34,14 @@ export default function Sidebar() {
       style={{ background: "var(--surface)", borderColor: "var(--border)" }}
     >
       {/* Logo */}
-      <div className="flex items-center gap-3 px-4 h-16 border-b" style={{ borderColor: "var(--border)" }}>
-        <div className="w-8 h-8 rounded-xl flex items-center justify-center font-bold text-sm flex-shrink-0 shadow-sm"
-          style={{ background: "var(--primary)", color: "#fff" }}>
-          R
-        </div>
-        {!collapsed && (
-          <div>
-            <p className="text-sm font-bold leading-none" style={{ color: "var(--foreground)" }}>Reserva360</p>
-            <p className="text-xs mt-0.5" style={{ color: "var(--foreground-dim)" }}>Sua Reserva. Nossa Solução.</p>
+      <div className="flex items-center justify-center px-3 h-16 border-b" style={{ borderColor: "var(--border)" }}>
+        {collapsed ? (
+          <div className="w-8 h-8 rounded-xl flex items-center justify-center font-bold text-sm flex-shrink-0"
+            style={{ background: "var(--primary)", color: "#fff" }}>
+            R
           </div>
+        ) : (
+          <Image src="/logo.png" alt="Reserva360" width={160} height={48} style={{ objectFit: "contain", maxHeight: "48px" }} priority />
         )}
       </div>
 
