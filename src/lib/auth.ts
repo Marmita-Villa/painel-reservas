@@ -45,10 +45,15 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       return token;
     },
     session({ session, token }) {
-      session.user.id           = token.id as string;
-      (session.user as any).role         = token.role;
-      (session.user as any).restaurantId = token.restaurantId;
-      return session;
+      return {
+        ...session,
+        user: {
+          ...session.user,
+          id:           token.id as string,
+          role:         token.role as string,
+          restaurantId: token.restaurantId as string | undefined,
+        },
+      };
     },
   },
   pages: {
