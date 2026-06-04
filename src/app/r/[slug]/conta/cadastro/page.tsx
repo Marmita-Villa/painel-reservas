@@ -3,7 +3,8 @@
 import { useState } from "react";
 import { useRouter, useParams } from "next/navigation";
 import Link from "next/link";
-import { Eye, EyeOff, UtensilsCrossed } from "lucide-react";
+import { Eye, EyeOff } from "lucide-react";
+import LogoComponent from "@/components/Logo";
 
 const C = {
   bg: "#f4f4f5",
@@ -77,9 +78,9 @@ export default function CadastroPage() {
   return (
     <div style={{ minHeight: "100vh", background: C.bg, display: "flex", alignItems: "center", justifyContent: "center", padding: "1rem", fontFamily: "system-ui, sans-serif" }}>
       <div style={{ width: "100%", maxWidth: 420 }}>
-        <div style={{ textAlign: "center", marginBottom: "2rem" }}>
-          <img src="/logo.png" alt="Reserva360" style={{ maxHeight: 64, maxWidth: 200, objectFit: "contain", margin: "0 auto 0.75rem", display: "block" }} />
-          <p style={{ color: C.muted, fontSize: "0.875rem" }}>Gerencie suas reservas com facilidade</p>
+        <div style={{ display: "flex", flexDirection: "column", alignItems: "center", marginBottom: "2rem", gap: "0.625rem" }}>
+          <LogoComponent size="lg" />
+          <p style={{ color: C.muted, fontSize: "0.875rem", margin: 0 }}>Gerencie suas reservas com facilidade</p>
         </div>
 
         <div style={{ background: C.sur, borderRadius: "0.75rem", border: `1px solid ${C.bdr}`, padding: "2rem", boxShadow: "0 1px 4px rgba(0,0,0,0.06)" }}>

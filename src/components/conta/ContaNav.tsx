@@ -2,7 +2,8 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { ArrowLeft, Calendar, Clock, User, LogOut } from "lucide-react";
+import { Calendar, Clock, User, LogOut } from "lucide-react";
+import Logo from "@/components/Logo";
 
 const C = {
   bg: "#ffffff",
@@ -36,8 +37,8 @@ export default function ContaNav({ slug }: ContaNavProps) {
     <nav style={{ background: C.bg, borderBottom: `1px solid ${C.bdr}`, fontFamily: "system-ui, sans-serif" }}>
       <div style={{ maxWidth: 700, margin: "0 auto", padding: "0 1rem" }}>
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "0.5rem", overflowX: "auto" }}>
-          <Link href={`/r/${slug}`} style={{ display: "flex", alignItems: "center", gap: "0.5rem", textDecoration: "none", padding: "0.5rem 0", flexShrink: 0 }}>
-            <img src="/logo.png" alt="Reserva360" style={{ maxHeight: 32, objectFit: "contain" }} />
+          <Link href={`/r/${slug}`} style={{ display: "flex", alignItems: "center", textDecoration: "none", padding: "0.5rem 0", flexShrink: 0 }}>
+            <Logo size="sm" variant="full" />
           </Link>
 
           <div style={{ display: "flex", alignItems: "center", gap: "0.25rem" }}>

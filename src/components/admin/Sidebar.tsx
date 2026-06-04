@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import Logo from "@/components/Logo";
 import { LayoutDashboard, CalendarDays, Users, Clock, Map, BarChart3, Settings, PanelLeftClose, PanelLeftOpen, UserCog, Store } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useState } from "react";
@@ -33,16 +34,11 @@ export default function Sidebar() {
       style={{ background: "var(--surface)", borderColor: "var(--border)" }}
     >
       {/* Logo */}
-      <div className="flex items-center justify-center px-3 h-16 border-b" style={{ borderColor: "var(--border)" }}>
-        {collapsed ? (
-          <div className="w-8 h-8 rounded-xl flex items-center justify-center font-bold text-sm flex-shrink-0"
-            style={{ background: "var(--primary)", color: "#fff" }}>
-            R
-          </div>
-        ) : (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img src="/logo.png" alt="Reserva360" style={{ objectFit: "contain", maxHeight: "48px", width: "100%" }} />
-        )}
+      <div className="flex items-center justify-center px-4 h-16 border-b" style={{ borderColor: "var(--border)" }}>
+        {collapsed
+          ? <Logo size="xs" variant="icon" />
+          : <Logo size="sm" variant="full" />
+        }
       </div>
 
       {/* Nav */}
