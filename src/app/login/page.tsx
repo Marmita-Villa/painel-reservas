@@ -4,7 +4,6 @@ import { useState } from "react";
 import { signIn } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { Eye, EyeOff, LogIn } from "lucide-react";
-import Image from "next/image";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -35,7 +34,8 @@ export default function LoginPage() {
 
         {/* Logo */}
         <div className="text-center mb-8">
-          <Image src="/logo.png" alt="Reserva360" width={220} height={70} style={{ objectFit: "contain", margin: "0 auto 8px" }} priority />
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src="/logo.png" alt="Reserva360" style={{ objectFit: "contain", maxHeight: "70px", maxWidth: "220px", margin: "0 auto 8px", display: "block" }} />
         </div>
 
         {/* Card */}

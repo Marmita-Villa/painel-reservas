@@ -1,7 +1,6 @@
 "use client";
 
 import Link from "next/link";
-import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { LayoutDashboard, CalendarDays, Users, Clock, Map, BarChart3, Settings, PanelLeftClose, PanelLeftOpen, UserCog, Store } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -41,7 +40,8 @@ export default function Sidebar() {
             R
           </div>
         ) : (
-          <Image src="/logo.png" alt="Reserva360" width={160} height={48} style={{ objectFit: "contain", maxHeight: "48px" }} priority />
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src="/logo.png" alt="Reserva360" style={{ objectFit: "contain", maxHeight: "48px", width: "100%" }} />
         )}
       </div>
 
