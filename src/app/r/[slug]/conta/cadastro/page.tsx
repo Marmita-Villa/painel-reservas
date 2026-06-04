@@ -7,7 +7,7 @@ import { Eye, EyeOff } from "lucide-react";
 import LogoComponent from "@/components/Logo";
 
 const C = {
-  bg: "#f4f4f5",
+  bg: "#ffffff",
   sur: "#ffffff",
   bdr: "#e4e4e7",
   fg: "#18181b",

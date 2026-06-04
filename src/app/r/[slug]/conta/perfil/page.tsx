@@ -6,7 +6,7 @@ import ContaNav from "@/components/conta/ContaNav";
 import { Eye, EyeOff, Save, Check } from "lucide-react";
 
 const C = {
-  bg: "#f4f4f5",
+  bg: "#ffffff",
   sur: "#ffffff",
   bdr: "#e4e4e7",
   fg: "#18181b",
@@ -115,7 +115,7 @@ export default function PerfilPage() {
   const labelStyle = { display: "block" as const, fontSize: "0.875rem", fontWeight: 500 as const, color: C.fg, marginBottom: "0.375rem" };
 
   return (
-    <div style={{ minHeight: "100vh", background: C.bg, fontFamily: "system-ui, sans-serif" }}>
+    <div style={{ minHeight: "100vh", background: "#ffffff", fontFamily: "system-ui, sans-serif" }}>
       <ContaNav slug={slug} />
       <div style={{ maxWidth: 600, margin: "0 auto", padding: "1.5rem 1rem" }}>
         <h1 style={{ fontSize: "1.375rem", fontWeight: 700, color: C.fg, marginBottom: "1.5rem" }}>Meu Perfil</h1>

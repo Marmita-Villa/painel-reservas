@@ -7,7 +7,7 @@ import ContaNav from "@/components/conta/ContaNav";
 import { Users, Calendar, PlusCircle, X } from "lucide-react";
 
 const C = {
-  bg: "#f4f4f5",
+  bg: "#ffffff",
   sur: "#ffffff",
   bdr: "#e4e4e7",
   fg: "#18181b",
@@ -100,7 +100,7 @@ export default function ReservasPage() {
   const now = new Date();
 
   return (
-    <div style={{ minHeight: "100vh", background: C.bg, fontFamily: "system-ui, sans-serif" }}>
+    <div style={{ minHeight: "100vh", background: "#ffffff", fontFamily: "system-ui, sans-serif" }}>
       <ContaNav slug={slug} />
 
       <div style={{ maxWidth: 700, margin: "0 auto", padding: "1.5rem 1rem" }}>
