@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 
-const PUBLIC_PATHS = ["/r/", "/api/", "/_next/", "/favicon", "/manifest", "/icon"];
+const PUBLIC_PATHS = ["/r/", "/fila/", "/api/", "/_next/", "/favicon", "/manifest", "/icon"];
 const AUTH_PAGES   = ["/login"];
 
 export async function proxy(req: NextRequest) {

@@ -144,6 +144,19 @@ export async function sendCancellationConfirmation(params: {
   return sendWhatsApp(phone, message);
 }
 
+export async function sendWaitlistReady(params: {
+  phone: string;
+  customerName: string;
+  restaurantName: string;
+  restaurantId: string;
+  waitlistEntryId?: string;
+}): Promise<boolean> {
+  const { phone, customerName, restaurantName, restaurantId } = params;
+  const firstName = customerName.split(' ')[0];
+  const message = `Olá, ${firstName}! 🎉\n\nSua mesa no *${restaurantName}* está pronta!\n\nPor favor, dirija-se ao restaurante agora. Sua vaga será reservada por 10 minutos. ⏰`;
+  return sendAndLog({ phone, message, type: 'WAITLIST_READY', restaurantId, customerId: undefined, reservationId: undefined });
+}
+
 export async function sendPostVisitFeedback(params: {
   phone: string;
   customerName: string;
