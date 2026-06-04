@@ -20,7 +20,7 @@ export async function POST(req: NextRequest) {
   const reminder2hFrom = new Date(now.getTime() + 90  * 60 * 1000);
   const reminder2hTo   = new Date(now.getTime() + 150 * 60 * 1000);
 
-  const activeStatuses = ['CONFIRMED', 'PENDING'];
+  const activeStatuses = ['CONFIRMED', 'PENDING'] as const;
 
   // Fetch both batches in parallel
   const [pending24h, pending2h] = await Promise.all([
