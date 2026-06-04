@@ -34,10 +34,9 @@ export default function LoginPage() {
       <div className="w-full max-w-sm">
 
         {/* Logo */}
-        <div className="flex justify-center mb-8 rounded-2xl overflow-hidden"
-          style={{ background: "#0f1729", padding: "20px 32px" }}>
+        <div className="flex justify-center mb-8">
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src="/logo.png" alt="Reserva360" style={{ maxHeight: 100, maxWidth: 260, objectFit: "contain" }} />
+          <img src="/logo.png" alt="Reserva360" style={{ maxHeight: 90, maxWidth: 280, objectFit: "contain" }} />
         </div>
 
         {/* Card */}

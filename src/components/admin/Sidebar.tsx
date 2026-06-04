@@ -35,15 +35,13 @@ export default function Sidebar() {
     >
       {/* Logo */}
       <div className="flex items-center justify-center border-b flex-shrink-0"
-        style={{ borderColor: "var(--border)", background: "#0f1729", height: collapsed ? "64px" : "80px", padding: collapsed ? "12px 8px" : "10px 12px" }}>
+        style={{ borderColor: "var(--border)", background: "var(--surface)", height: collapsed ? "64px" : "80px", padding: collapsed ? "8px" : "8px 12px" }}>
         {collapsed ? (
-          <div style={{ width: 36, height: 36, borderRadius: 8, overflow: "hidden", display: "flex", alignItems: "center", justifyContent: "center" }}>
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src="/logo.png" alt="R360" style={{ width: 72, height: 72, objectFit: "cover", objectPosition: "center top", marginTop: "-4px" }} />
-          </div>
+          // eslint-disable-next-line @next/next/no-img-element
+          <img src="/logo.png" alt="R360" style={{ height: 44, width: 44, objectFit: "contain" }} />
         ) : (
           // eslint-disable-next-line @next/next/no-img-element
-          <img src="/logo.png" alt="Reserva360" style={{ width: "100%", height: "100%", objectFit: "contain" }} />
+          <img src="/logo.png" alt="Reserva360" style={{ height: 62, objectFit: "contain", maxWidth: "100%" }} />
         )}
       </div>
 
