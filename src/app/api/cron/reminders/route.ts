@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { ReservationStatus } from '@prisma/client';
 import { prisma } from '@/lib/prisma';
 import { sendReminder24h, sendReminder2h } from '@/lib/notifications';
 
@@ -20,7 +21,7 @@ export async function POST(req: NextRequest) {
   const reminder2hFrom = new Date(now.getTime() + 90  * 60 * 1000);
   const reminder2hTo   = new Date(now.getTime() + 150 * 60 * 1000);
 
-  const activeStatuses = ['CONFIRMED', 'PENDING'] as const;
+  const activeStatuses: ReservationStatus[] = [ReservationStatus.CONFIRMED, ReservationStatus.PENDING];
 
   // Fetch both batches in parallel
   const [pending24h, pending2h] = await Promise.all([
