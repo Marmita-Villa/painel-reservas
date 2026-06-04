@@ -30,13 +30,13 @@ export default function LoginPage() {
 
   return (
     <div className="min-h-screen flex items-center justify-center px-4"
-      style={{ background: "var(--background)" }}>
+      style={{ background: "#ffffff" }}>
       <div className="w-full max-w-sm">
 
         {/* Logo */}
         <div className="flex justify-center mb-8">
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src="/logo.png" alt="Reserva360" style={{ maxHeight: 90, maxWidth: 280, objectFit: "contain" }} />
+          <img src="/logo.png" alt="Reserva360" style={{ width: "100%", maxWidth: 360, objectFit: "contain" }} />
         </div>
 
         {/* Card */}
