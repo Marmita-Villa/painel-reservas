@@ -40,7 +40,7 @@ export default function Sidebar() {
             R
           </div>
         ) : (
-          {/* eslint-disable-next-line @next/next/no-img-element */}
+          // eslint-disable-next-line @next/next/no-img-element
           <img src="/logo.png" alt="Reserva360" style={{ objectFit: "contain", maxHeight: "48px", width: "100%" }} />
         )}
       </div>
