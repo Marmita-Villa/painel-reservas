@@ -1,7 +1,8 @@
 "use client";
 
-import { useState } from "react";
-import { Settings, Clock, Bell, CreditCard, Globe } from "lucide-react";
+import { useState, useEffect } from "react";
+import { Settings, Clock, Bell, CreditCard, Globe, Check, AlertCircle, Loader2 } from "lucide-react";
+import { useSession } from "next-auth/react";
 
 const tabs = [
   { id: "geral", label: "Geral", icon: Settings },
@@ -13,8 +14,62 @@ const tabs = [
 
 const days = ["Domingo", "Segunda", "Terça", "Quarta", "Quinta", "Sexta", "Sábado"];
 
+type SaveState = "idle" | "saving" | "success" | "error";
+
 export default function ConfiguracoesPage() {
+  const { data: session } = useSession();
+  const restaurantId = (session?.user as any)?.restaurantId as string | undefined;
+
   const [activeTab, setActiveTab] = useState("geral");
+  const [saveState, setSaveState] = useState<SaveState>("idle");
+
+  // Geral fields
+  const [name, setName] = useState("");
+  const [phone, setPhone] = useState("");
+  const [email, setEmail] = useState("");
+  const [address, setAddress] = useState("");
+  const [loadingGeral, setLoadingGeral] = useState(false);
+
+  // Load restaurant data when tab is active and restaurantId available
+  useEffect(() => {
+    if (activeTab !== "geral" || !restaurantId) return;
+    setLoadingGeral(true);
+    fetch(`/api/restaurants/${restaurantId}`)
+      .then((r) => r.json())
+      .then((data) => {
+        if (!data.error) {
+          setName(data.name ?? "");
+          setPhone(data.phone ?? "");
+          setEmail(data.email ?? "");
+          setAddress(data.address ?? "");
+        }
+      })
+      .catch(() => {})
+      .finally(() => setLoadingGeral(false));
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [restaurantId]);
+
+  async function saveGeral() {
+    if (!restaurantId) return;
+    setSaveState("saving");
+    try {
+      const res = await fetch(`/api/restaurants/${restaurantId}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name, phone, email, address }),
+      });
+      if (res.ok) {
+        setSaveState("success");
+        setTimeout(() => setSaveState("idle"), 3000);
+      } else {
+        setSaveState("error");
+        setTimeout(() => setSaveState("idle"), 3000);
+      }
+    } catch {
+      setSaveState("error");
+      setTimeout(() => setSaveState("idle"), 3000);
+    }
+  }
 
   return (
     <div className="space-y-6">
@@ -57,36 +112,96 @@ export default function ConfiguracoesPage() {
               style={{ background: "var(--surface)", borderColor: "var(--border)" }}
             >
               <h2 className="font-semibold" style={{ color: "var(--foreground)" }}>Informações do Restaurante</h2>
-              <div className="grid grid-cols-2 gap-4">
-                {[
-                  { label: "Nome do restaurante", placeholder: "Ex: Ristorante Roma", type: "text" },
-                  { label: "Telefone", placeholder: "(11) 99999-9999", type: "tel" },
-                  { label: "Email", placeholder: "contato@restaurante.com.br", type: "email" },
-                  { label: "Endereço", placeholder: "Rua, número, bairro", type: "text" },
-                ].map((f) => (
-                  <div key={f.label}>
-                    <label className="block text-sm mb-1.5" style={{ color: "var(--foreground-muted)" }}>
-                      {f.label}
-                    </label>
-                    <input
-                      type={f.type}
-                      placeholder={f.placeholder}
-                      className="w-full px-3 py-2.5 rounded-lg text-sm outline-none"
-                      style={{
-                        background: "var(--surface-2)",
-                        border: "1px solid var(--border)",
-                        color: "var(--foreground)",
-                      }}
-                    />
+
+              {loadingGeral ? (
+                <div className="flex items-center gap-2 py-4" style={{ color: "var(--foreground-muted)" }}>
+                  <Loader2 size={16} className="animate-spin" />
+                  <span className="text-sm">Carregando dados...</span>
+                </div>
+              ) : (
+                <>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm mb-1.5" style={{ color: "var(--foreground-muted)" }}>
+                        Nome do restaurante
+                      </label>
+                      <input
+                        type="text"
+                        placeholder="Ex: Ristorante Roma"
+                        value={name}
+                        onChange={(e) => setName(e.target.value)}
+                        className="w-full px-3 py-2.5 rounded-lg text-sm outline-none"
+                        style={{ background: "var(--surface-2)", border: "1px solid var(--border)", color: "var(--foreground)" }}
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm mb-1.5" style={{ color: "var(--foreground-muted)" }}>
+                        Telefone
+                      </label>
+                      <input
+                        type="tel"
+                        placeholder="(11) 99999-9999"
+                        value={phone}
+                        onChange={(e) => setPhone(e.target.value)}
+                        className="w-full px-3 py-2.5 rounded-lg text-sm outline-none"
+                        style={{ background: "var(--surface-2)", border: "1px solid var(--border)", color: "var(--foreground)" }}
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm mb-1.5" style={{ color: "var(--foreground-muted)" }}>
+                        Email
+                      </label>
+                      <input
+                        type="email"
+                        placeholder="contato@restaurante.com.br"
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
+                        className="w-full px-3 py-2.5 rounded-lg text-sm outline-none"
+                        style={{ background: "var(--surface-2)", border: "1px solid var(--border)", color: "var(--foreground)" }}
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm mb-1.5" style={{ color: "var(--foreground-muted)" }}>
+                        Endereço
+                      </label>
+                      <input
+                        type="text"
+                        placeholder="Rua, número, bairro"
+                        value={address}
+                        onChange={(e) => setAddress(e.target.value)}
+                        className="w-full px-3 py-2.5 rounded-lg text-sm outline-none"
+                        style={{ background: "var(--surface-2)", border: "1px solid var(--border)", color: "var(--foreground)" }}
+                      />
+                    </div>
                   </div>
-                ))}
-              </div>
-              <button
-                className="px-5 py-2.5 rounded-lg text-sm font-medium text-white"
-                style={{ background: "var(--primary)" }}
-              >
-                Salvar alterações
-              </button>
+
+                  <div className="flex items-center gap-3">
+                    <button
+                      onClick={saveGeral}
+                      disabled={saveState === "saving"}
+                      className="flex items-center gap-2 px-5 py-2.5 rounded-lg text-sm font-medium text-white disabled:opacity-60"
+                      style={{ background: "var(--primary)" }}
+                    >
+                      {saveState === "saving" ? (
+                        <><Loader2 size={14} className="animate-spin" /> Salvando...</>
+                      ) : (
+                        "Salvar alterações"
+                      )}
+                    </button>
+
+                    {saveState === "success" && (
+                      <span className="flex items-center gap-1.5 text-sm" style={{ color: "var(--success)" }}>
+                        <Check size={14} /> Salvo com sucesso!
+                      </span>
+                    )}
+                    {saveState === "error" && (
+                      <span className="flex items-center gap-1.5 text-sm" style={{ color: "var(--danger)" }}>
+                        <AlertCircle size={14} /> Erro ao salvar. Tente novamente.
+                      </span>
+                    )}
+                  </div>
+                </>
+              )}
             </div>
           )}
 
@@ -109,22 +224,14 @@ export default function ConfiguracoesPage() {
                       type="time"
                       defaultValue="12:00"
                       className="px-2 py-1.5 rounded-lg text-sm outline-none"
-                      style={{
-                        background: "var(--surface-2)",
-                        border: "1px solid var(--border)",
-                        color: "var(--foreground)",
-                      }}
+                      style={{ background: "var(--surface-2)", border: "1px solid var(--border)", color: "var(--foreground)" }}
                     />
                     <span style={{ color: "var(--foreground-muted)" }}>até</span>
                     <input
                       type="time"
                       defaultValue="23:00"
                       className="px-2 py-1.5 rounded-lg text-sm outline-none"
-                      style={{
-                        background: "var(--surface-2)",
-                        border: "1px solid var(--border)",
-                        color: "var(--foreground)",
-                      }}
+                      style={{ background: "var(--surface-2)", border: "1px solid var(--border)", color: "var(--foreground)" }}
                     />
                   </div>
                 ))}
@@ -184,11 +291,7 @@ export default function ConfiguracoesPage() {
                   type="number"
                   placeholder="Ex: 50.00"
                   className="w-40 px-3 py-2.5 rounded-lg text-sm outline-none"
-                  style={{
-                    background: "var(--surface-2)",
-                    border: "1px solid var(--border)",
-                    color: "var(--foreground)",
-                  }}
+                  style={{ background: "var(--surface-2)", border: "1px solid var(--border)", color: "var(--foreground)" }}
                 />
               </div>
               <div>
@@ -197,11 +300,7 @@ export default function ConfiguracoesPage() {
                 </label>
                 <select
                   className="px-3 py-2.5 rounded-lg text-sm outline-none"
-                  style={{
-                    background: "var(--surface-2)",
-                    border: "1px solid var(--border)",
-                    color: "var(--foreground)",
-                  }}
+                  style={{ background: "var(--surface-2)", border: "1px solid var(--border)", color: "var(--foreground)" }}
                 >
                   <option>2 horas antes</option>
                   <option>4 horas antes</option>

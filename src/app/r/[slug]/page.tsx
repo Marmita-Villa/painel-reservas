@@ -1,32 +1,95 @@
+import { notFound } from "next/navigation";
+import { prisma } from "@/lib/prisma";
 import WidgetClient from "./WidgetClient";
 
-const RESTAURANT_ID = process.env.NEXT_PUBLIC_RESTAURANT_ID ?? "cmpwr87ok0000y0vm4bw1s7l6";
+function generateSlots(restaurant: {
+  rooms: Array<{ schedules: Array<{ dayOfWeek: number; openTime: string; closeTime: string; slotInterval: number; isOnline: boolean }> }>;
+  settings: { maxAdvanceDays: number } | null;
+}) {
+  const maxDays = restaurant.settings?.maxAdvanceDays ?? 30;
+  const slots: { date: string; times: string[] }[] = [];
 
-function generateSlots() {
-  const slots = [];
-  const times = ["12:00", "12:30", "13:00", "19:00", "19:30", "20:00", "20:30", "21:00"];
-  for (let i = 0; i < 14; i++) {
+  for (let i = 0; i < maxDays; i++) {
     const d = new Date();
     d.setDate(d.getDate() + i);
+    const dow = d.getDay();
     const dateStr = d.toISOString().split("T")[0];
-    slots.push({ date: dateStr, times });
+
+    const times: string[] = [];
+
+    for (const room of restaurant.rooms) {
+      for (const schedule of room.schedules) {
+        if (!schedule.isOnline) continue;
+        if (schedule.dayOfWeek !== dow) continue;
+
+        const [oh, om] = schedule.openTime.split(":").map(Number);
+        const [ch, cm] = schedule.closeTime.split(":").map(Number);
+        let cur = oh * 60 + om;
+        const end = ch * 60 + cm;
+
+        while (cur < end) {
+          const hh = String(Math.floor(cur / 60)).padStart(2, "0");
+          const mm = String(cur % 60).padStart(2, "0");
+          const t = `${hh}:${mm}`;
+          if (!times.includes(t)) times.push(t);
+          cur += schedule.slotInterval;
+        }
+      }
+    }
+
+    times.sort();
+    if (times.length > 0) slots.push({ date: dateStr, times });
   }
+
+  // Fallback to static slots if no schedules configured
+  if (slots.length === 0) {
+    const staticTimes = ["12:00", "12:30", "13:00", "19:00", "19:30", "20:00", "20:30", "21:00"];
+    for (let i = 0; i < 14; i++) {
+      const d = new Date();
+      d.setDate(d.getDate() + i);
+      slots.push({ date: d.toISOString().split("T")[0], times: staticTimes });
+    }
+  }
+
   return slots;
 }
 
-const restaurant = {
-  id: RESTAURANT_ID,
-  slug: "ristorante-roma",
-  name: "Ristorante Roma",
-  description: "Culinária italiana autêntica no coração de São Paulo",
-  address: "Rua Augusta, 1200 — Consolação, São Paulo",
-  coverUrl: null,
-  logoUrl: null,
-  primaryColor: "#6c63ff",
-  phone: "(11) 99999-9999",
-  availableSlots: generateSlots(),
-};
+export default async function WidgetPage({
+  params,
+}: {
+  params: Promise<{ slug: string }>;
+}) {
+  const { slug } = await params;
 
-export default function WidgetPage() {
-  return <WidgetClient restaurant={restaurant} />;
+  const restaurant = await prisma.restaurant.findUnique({
+    where: { slug },
+    include: {
+      settings: true,
+      rooms: {
+        where: { isActive: true },
+        include: {
+          schedules: { where: { isActive: true } },
+        },
+      },
+    },
+  });
+
+  if (!restaurant) notFound();
+
+  const availableSlots = generateSlots(restaurant);
+
+  const widgetRestaurant = {
+    id: restaurant.id,
+    slug: restaurant.slug,
+    name: restaurant.name,
+    description: restaurant.settings ? "" : "Faça sua reserva online",
+    address: restaurant.address ?? "",
+    coverUrl: null,
+    logoUrl: restaurant.logoUrl ?? null,
+    primaryColor: "#6c63ff",
+    phone: restaurant.phone ?? "",
+    availableSlots,
+  };
+
+  return <WidgetClient restaurant={widgetRestaurant} />;
 }

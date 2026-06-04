@@ -17,6 +17,12 @@ export const metadata: Metadata = {
   description: "Sistema de gestão de reservas para restaurantes",
 };
 
+export const viewport = {
+  themeColor: "#c9a84c",
+  width: "device-width",
+  initialScale: 1,
+};
+
 export default function RootLayout({
   children,
 }: Readonly<{
