@@ -36,9 +36,8 @@ export default function ContaNav({ slug }: ContaNavProps) {
     <nav style={{ background: C.bg, borderBottom: `1px solid ${C.bdr}`, fontFamily: "system-ui, sans-serif" }}>
       <div style={{ maxWidth: 700, margin: "0 auto", padding: "0 1rem" }}>
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "0.5rem", overflowX: "auto" }}>
-          <Link href={`/r/${slug}`} style={{ display: "flex", alignItems: "center", gap: "0.375rem", color: C.muted, fontSize: "0.8125rem", textDecoration: "none", whiteSpace: "nowrap", padding: "0.875rem 0", flexShrink: 0 }}>
-            <ArrowLeft size={14} />
-            Nova reserva
+          <Link href={`/r/${slug}`} style={{ display: "flex", alignItems: "center", gap: "0.5rem", textDecoration: "none", padding: "0.5rem 0", flexShrink: 0 }}>
+            <img src="/logo.png" alt="Reserva360" style={{ maxHeight: 32, objectFit: "contain" }} />
           </Link>
 
           <div style={{ display: "flex", alignItems: "center", gap: "0.25rem" }}>

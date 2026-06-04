@@ -52,13 +52,10 @@ export default function LoginPage() {
   return (
     <div style={{ minHeight: "100vh", background: C.bg, display: "flex", alignItems: "center", justifyContent: "center", padding: "1rem", fontFamily: "system-ui, sans-serif" }}>
       <div style={{ width: "100%", maxWidth: 400 }}>
-        {/* Logo / Title */}
+        {/* Logo */}
         <div style={{ textAlign: "center", marginBottom: "2rem" }}>
-          <div style={{ width: 64, height: 64, borderRadius: "50%", background: C.goldL, border: `2px solid ${C.gold}`, display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 1rem" }}>
-            <UtensilsCrossed size={28} color={C.gold} />
-          </div>
-          <h1 style={{ fontSize: "1.5rem", fontWeight: 700, color: C.fg, margin: 0 }}>Minha Conta</h1>
-          <p style={{ color: C.muted, fontSize: "0.875rem", marginTop: "0.25rem" }}>Faça login para gerenciar suas reservas</p>
+          <img src="/logo.png" alt="Reserva360" style={{ maxHeight: 64, maxWidth: 200, objectFit: "contain", margin: "0 auto 0.75rem", display: "block" }} />
+          <p style={{ color: C.muted, fontSize: "0.875rem" }}>Faça login para gerenciar suas reservas</p>
         </div>
 
         {/* Card */}
