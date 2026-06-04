@@ -53,7 +53,21 @@ export default function WidgetClient({ restaurant }: { restaurant: Restaurant })
 
   const today = new Date();
   const todayStr = today.toISOString().split("T")[0];
-  const availMap = new Map(restaurant.availableSlots.map(s=>[s.date,s.times]));
+  const nowMinutes = today.getHours() * 60 + today.getMinutes() + 60; // 60min buffer
+
+  // Build availMap filtering out past times for today
+  const availMap = new Map(
+    restaurant.availableSlots
+      .map(s => {
+        if (s.date !== todayStr) return [s.date, s.times] as [string, string[]];
+        const futureTimes = s.times.filter(t => {
+          const [h, m] = t.split(":").map(Number);
+          return h * 60 + m > nowMinutes;
+        });
+        return futureTimes.length > 0 ? [s.date, futureTimes] as [string, string[]] : null;
+      })
+      .filter(Boolean) as [string, string[]][]
+  );
 
   // Calendar grid: 6 weeks starting from first day of calMonth
   const calDays = (() => {
@@ -71,7 +85,16 @@ export default function WidgetClient({ restaurant }: { restaurant: Restaurant })
   })();
 
   const maxMonth = (() => { const d = new Date(); d.setDate(1); d.setMonth(d.getMonth()+2); return d; })();
-  const timesForDate = selectedDate ? (availMap.get(selectedDate)||[]) : [];
+
+  // Filter out past times when selected date is today (with 60min buffer)
+  const allTimesForDate = selectedDate ? (availMap.get(selectedDate)||[]) : [];
+  const timesForDate = allTimesForDate.filter(t => {
+    if (selectedDate !== todayStr) return true;
+    const [h, m] = t.split(":").map(Number);
+    const slotMs = h * 60 + m;
+    const nowMs  = today.getHours() * 60 + today.getMinutes() + 60; // 60min antecedência
+    return slotMs > nowMs;
+  });
   const lunchTimes  = timesForDate.filter(t=>parseInt(t)<17);
   const dinnerTimes = timesForDate.filter(t=>parseInt(t)>=17);
 
