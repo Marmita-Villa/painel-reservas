@@ -1,10 +1,9 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { CalendarDays, Filter, Users, CheckCircle2, XCircle, AlertCircle, MessageCircle } from "lucide-react";
 import { useReserva } from "@/components/admin/ReservaProvider";
-
-const RESTAURANT_ID = process.env.NEXT_PUBLIC_RESTAURANT_ID!;
+import { useRestaurant } from "@/contexts/RestaurantContext";
 
 const statusConfig: Record<string, { label: string; color: string }> = {
   CONFIRMED: { label: "Confirmado", color: "var(--info)" },
@@ -29,6 +28,7 @@ function formatTime(dateStr: string) {
 
 export default function ReservasPage() {
   const { openModal } = useReserva();
+  const { effectiveRestaurantId } = useRestaurant();
   const today = new Date().toISOString().split("T")[0];
   const [date, setDate] = useState(today);
   const [statusFilter, setStatusFilter] = useState("");
@@ -36,10 +36,11 @@ export default function ReservasPage() {
   const [reservations, setReservations] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
 
-  async function fetchReservations() {
+  const fetchReservations = useCallback(async () => {
     setLoading(true);
     try {
-      const params = new URLSearchParams({ restaurantId: RESTAURANT_ID, date });
+      const params = new URLSearchParams({ date });
+      if (effectiveRestaurantId) params.set("restaurantId", effectiveRestaurantId);
       if (statusFilter) params.set("status", statusFilter);
       const res = await fetch(`/api/reservations?${params}`);
       const data = await res.json();
@@ -49,9 +50,9 @@ export default function ReservasPage() {
     } finally {
       setLoading(false);
     }
-  }
+  }, [date, statusFilter, effectiveRestaurantId]);
 
-  useEffect(() => { fetchReservations(); }, [date, statusFilter]);
+  useEffect(() => { fetchReservations(); }, [fetchReservations]);
 
   const filtered = originFilter
     ? reservations.filter(r => r.origin === originFilter)

@@ -1,8 +1,9 @@
-import { CalendarDays, Users, Clock, TrendingUp, CheckCircle2, XCircle, AlertCircle, ArrowUpRight } from "lucide-react";
-import { prisma } from "@/lib/prisma";
+"use client";
+
+import { CalendarDays, Users, Clock, TrendingUp, ArrowUpRight } from "lucide-react";
 import { formatTime } from "@/lib/utils";
-import AutoRefresh from "@/components/admin/AutoRefresh";
-import { auth } from "@/lib/auth";
+import { useRestaurant } from "@/contexts/RestaurantContext";
+import { useEffect, useState, useCallback } from "react";
 
 const statusConfig: Record<string, { label: string; color: string; bg: string }> = {
   CONFIRMED: { label: "Confirmado", color: "var(--info)",    bg: "var(--info-bg)" },
@@ -19,48 +20,57 @@ const originLabel: Record<string, string> = {
   WHATSAPP: "WhatsApp", INSTAGRAM: "Instagram", PHONE: "Telefone",
 };
 
-function todaySaoPaulo() {
-  return new Intl.DateTimeFormat("en-CA", { timeZone: "America/Sao_Paulo" }).format(new Date());
+interface Reservation {
+  id: string;
+  date: string;
+  status: string;
+  partySize: number;
+  origin: string;
+  customer?: { name?: string; phone?: string } | null;
+  table?: { name?: string } | null;
 }
 
-function spDate(dateStr: string, time: string) {
-  return new Date(`${dateStr}T${time}:00-03:00`);
+interface WaitlistEntry { id: string; }
+
+interface DashboardData {
+  reservations: Reservation[];
+  waitlist: WaitlistEntry[];
+  totalPeople: number;
 }
 
-async function getData(restaurantId: string) {
-  const todayStr = todaySaoPaulo();
-  const start = spDate(todayStr, "00:00");
-  const end   = spDate(todayStr, "23:59");
+export default function DashboardPage() {
+  const { effectiveRestaurantId } = useRestaurant();
+  const [data, setData] = useState<DashboardData | null>(null);
+  const [loading, setLoading] = useState(true);
 
-  const [reservations, waitlist] = await Promise.all([
-    prisma.reservation.findMany({
-      where: { restaurantId, date: { gte: start, lte: end } },
-      include: { customer: true, table: true },
-      orderBy: { date: "asc" },
-    }),
-    prisma.waitlistEntry.findMany({
-      where: { restaurantId, status: { in: ["WAITING", "CALLED"] } },
-    }),
-  ]);
+  const fetchData = useCallback(async () => {
+    setLoading(true);
+    try {
+      const url = effectiveRestaurantId
+        ? `/api/dashboard?restaurantId=${effectiveRestaurantId}`
+        : "/api/dashboard";
+      const res = await fetch(url);
+      if (res.ok) setData(await res.json());
+    } catch {}
+    setLoading(false);
+  }, [effectiveRestaurantId]);
 
-  const totalPeople = reservations
-    .filter(r => !["CANCELLED","NO_SHOW"].includes(r.status))
-    .reduce((s, r) => s + r.partySize, 0);
+  useEffect(() => { fetchData(); }, [fetchData]);
 
-  return { reservations, waitlist, totalPeople };
-}
+  // Auto-refresh every 30 seconds
+  useEffect(() => {
+    const id = setInterval(() => fetchData(), 30000);
+    return () => clearInterval(id);
+  }, [fetchData]);
 
-export default async function DashboardPage() {
-  const session = await auth();
-  const RESTAURANT_ID = (session?.user as any)?.restaurantId ?? process.env.NEXT_PUBLIC_RESTAURANT_ID!;
-  const { reservations, waitlist, totalPeople } = await getData(RESTAURANT_ID);
+  const reservations = data?.reservations ?? [];
+  const waitlist = data?.waitlist ?? [];
+  const totalPeople = data?.totalPeople ?? 0;
   const confirmed = reservations.filter(r => r.status === "CONFIRMED").length;
   const occupied  = Math.round((totalPeople / 120) * 100);
 
   return (
     <div className="p-8 space-y-8 max-w-7xl mx-auto">
-      <AutoRefresh intervalMs={30000} />
-
       {/* Header */}
       <div className="flex items-end justify-between">
         <div>
@@ -75,6 +85,10 @@ export default async function DashboardPage() {
           {new Intl.DateTimeFormat("pt-BR", { weekday: "long", day: "numeric", month: "long" }).format(new Date())}
         </p>
       </div>
+
+      {loading && (
+        <div className="text-sm py-4" style={{ color: "var(--foreground-muted)" }}>Carregando...</div>
+      )}
 
       {/* KPIs */}
       <div className="grid grid-cols-2 xl:grid-cols-4 gap-4">
@@ -125,7 +139,9 @@ export default async function DashboardPage() {
         {reservations.length === 0 ? (
           <div className="py-20 text-center">
             <CalendarDays size={36} className="mx-auto mb-3 opacity-20" style={{ color: "var(--foreground-muted)" }} />
-            <p className="font-medium" style={{ color: "var(--foreground-muted)" }}>Nenhuma reserva para hoje</p>
+            <p className="font-medium" style={{ color: "var(--foreground-muted)" }}>
+              {loading ? "Carregando reservas..." : "Nenhuma reserva para hoje"}
+            </p>
           </div>
         ) : (
           <table className="w-full">
@@ -145,7 +161,7 @@ export default async function DashboardPage() {
                     style={{ borderBottom: i < reservations.length - 1 ? "1px solid var(--border-subtle)" : undefined }}>
                     <td className="px-6 py-4">
                       <span className="font-mono text-sm font-semibold" style={{ color: "var(--foreground)" }}>
-                        {formatTime(r.date)}
+                        {formatTime(new Date(r.date))}
                       </span>
                     </td>
                     <td className="px-6 py-4">

@@ -1,9 +1,10 @@
 "use client";
 
-import { Bell, Plus, LogOut, ChevronDown, Search, User, CalendarDays, X } from "lucide-react";
+import { Bell, Plus, LogOut, ChevronDown, Search, User, CalendarDays, X, Store, Check } from "lucide-react";
 import { useReserva } from "./ReservaProvider";
 import { signOut, useSession } from "next-auth/react";
 import { useState, useRef, useEffect, useCallback } from "react";
+import { useRestaurant } from "@/contexts/RestaurantContext";
 
 const roleBadge: Record<string, { label: string; bg: string }> = {
   MASTER_SUPER: { label: "Master",  bg: "#7c3aed" },
@@ -24,16 +25,27 @@ interface SearchResults { reservations: SearchReservation[]; customers: SearchCu
 export default function Header() {
   const { openModal } = useReserva();
   const { data: session } = useSession();
+  const { restaurants, selectedRestaurantId, setSelectedRestaurantId } = useRestaurant();
   const [menuOpen, setMenuOpen] = useState(false);
+  const [restaurantMenuOpen, setRestaurantMenuOpen] = useState(false);
   const [query, setQuery] = useState("");
   const [results, setResults] = useState<SearchResults | null>(null);
   const [searchLoading, setSearchLoading] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
   const searchRef = useRef<HTMLDivElement>(null);
+  const restaurantMenuRef = useRef<HTMLDivElement>(null);
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const role = (session?.user as any)?.role ?? "USUARIO";
   const badge = roleBadge[role] ?? roleBadge.USUARIO;
+  const isMasterSuper = role === "MASTER_SUPER";
+
+  const selectedRestaurant = restaurants.find(r => r.id === selectedRestaurantId);
+  const restaurantLabel = selectedRestaurant
+    ? selectedRestaurant.name.length > 20
+      ? selectedRestaurant.name.slice(0, 20) + "…"
+      : selectedRestaurant.name
+    : "Todos os restaurantes";
 
   const initials = session?.user?.name
     ?.split(" ").map((n) => n[0]).slice(0, 2).join("").toUpperCase() ?? "?";
@@ -71,11 +83,14 @@ export default function Header() {
     setSearchOpen(false);
   }
 
-  // Close dropdown on outside click
+  // Close dropdowns on outside click
   useEffect(() => {
     function handler(e: MouseEvent) {
       if (searchRef.current && !searchRef.current.contains(e.target as Node)) {
         setSearchOpen(false);
+      }
+      if (restaurantMenuRef.current && !restaurantMenuRef.current.contains(e.target as Node)) {
+        setRestaurantMenuOpen(false);
       }
     }
     document.addEventListener("mousedown", handler);
@@ -158,6 +173,60 @@ export default function Header() {
           </div>
         )}
       </div>
+
+      {/* Restaurant Switcher — MASTER_SUPER only */}
+      {isMasterSuper && (
+        <div className="relative" ref={restaurantMenuRef}>
+          <button
+            onClick={() => setRestaurantMenuOpen(o => !o)}
+            className="flex items-center gap-2 px-3 py-2 rounded-xl text-sm transition-all hover:opacity-80 border"
+            style={{ background: "var(--surface-2)", borderColor: selectedRestaurantId ? "var(--primary)" : "var(--border)", color: selectedRestaurantId ? "var(--primary)" : "var(--foreground-muted)" }}
+          >
+            <Store size={13} />
+            <span className="hidden sm:block max-w-[160px] truncate" style={{ fontSize: "12px", fontWeight: 500 }}>
+              {restaurantLabel}
+            </span>
+            <ChevronDown size={11} />
+          </button>
+
+          {restaurantMenuOpen && (
+            <div
+              className="absolute top-full mt-1 left-0 rounded-xl border shadow-lg z-50 overflow-hidden"
+              style={{ background: "var(--surface)", borderColor: "var(--border)", minWidth: "200px" }}
+            >
+              {/* All restaurants option */}
+              <button
+                onClick={() => { setSelectedRestaurantId(null); setRestaurantMenuOpen(false); }}
+                className="w-full flex items-center gap-3 px-4 py-2.5 text-sm transition-all hover:bg-white/[0.04] text-left"
+                style={{ borderBottom: "1px solid var(--border)", color: "var(--foreground)" }}
+              >
+                <Store size={13} style={{ color: "var(--foreground-dim)" }} />
+                <span className="flex-1">Todos</span>
+                {!selectedRestaurantId && <Check size={12} style={{ color: "var(--primary)" }} />}
+              </button>
+
+              {restaurants.map(r => (
+                <button
+                  key={r.id}
+                  onClick={() => { setSelectedRestaurantId(r.id); setRestaurantMenuOpen(false); }}
+                  className="w-full flex items-center gap-3 px-4 py-2.5 text-sm transition-all hover:bg-white/[0.04] text-left"
+                  style={{ borderBottom: "1px solid var(--border-subtle)", color: "var(--foreground)" }}
+                >
+                  <Store size={13} style={{ color: "var(--foreground-dim)", opacity: 0 }} />
+                  <span className="flex-1 truncate">{r.name}</span>
+                  {selectedRestaurantId === r.id && <Check size={12} style={{ color: "var(--primary)" }} />}
+                </button>
+              ))}
+
+              {restaurants.length === 0 && (
+                <div className="px-4 py-3 text-xs" style={{ color: "var(--foreground-muted)" }}>
+                  Carregando…
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+      )}
 
       <span className="text-xs capitalize hidden lg:block" style={{ color: "var(--foreground-dim)" }}>{today}</span>
 
