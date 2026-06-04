@@ -122,8 +122,18 @@ model Customer {
   reservations      Reservation[]
   waitlistEntries   WaitlistEntry[]
   notificationLogs  NotificationLog[]
+  account           CustomerAccount?
 
   @@unique([restaurantId, phone])
+}
+
+model CustomerAccount {
+  id         String   @id @default(cuid())
+  email      String
+  password   String
+  customerId String   @unique
+  customer   Customer @relation(fields: [customerId], references: [id])
+  createdAt  DateTime @default(now())
 }
 
 model Reservation {
