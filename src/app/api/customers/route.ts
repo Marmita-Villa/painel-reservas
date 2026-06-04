@@ -22,7 +22,20 @@ export async function GET(req: NextRequest) {
   const customers = await prisma.customer.findMany({
     where: { restaurantId: effectiveRestaurantId },
     orderBy: { visitCount: "desc" },
+    include: {
+      reservations: {
+        where: { status: { in: ["COMPLETED", "ARRIVED"] } },
+        orderBy: { date: "desc" },
+        take: 1,
+        select: { date: true },
+      },
+    },
   });
 
-  return NextResponse.json(customers);
+  const result = customers.map(({ reservations, ...c }) => ({
+    ...c,
+    lastVisit: reservations[0]?.date ?? null,
+  }));
+
+  return NextResponse.json(result);
 }

@@ -16,12 +16,10 @@ export async function GET(
     include: {
       reservations: {
         orderBy: { date: "desc" },
-        take: 10,
         include: { table: true },
       },
       notificationLogs: {
         orderBy: { sentAt: "desc" },
-        take: 5,
       },
     },
   });
@@ -40,7 +38,7 @@ export async function PUT(
 
   const { id } = await params;
   const body = await req.json();
-  const { allergies, preferences, favoriteTable, internalNotes, isBlacklisted, blacklistReason } = body;
+  const { allergies, preferences, favoriteTable, internalNotes, isBlacklisted, blacklistReason, tags } = body;
 
   const updated = await prisma.customer.update({
     where: { id },
@@ -51,6 +49,7 @@ export async function PUT(
       ...(internalNotes !== undefined && { internalNotes }),
       ...(isBlacklisted !== undefined && { isBlacklisted }),
       ...(blacklistReason !== undefined && { blacklistReason }),
+      ...(tags !== undefined && { tags }),
     },
   });
 
