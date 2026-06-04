@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { CalendarDays, Filter, Users, CheckCircle2, XCircle, AlertCircle } from "lucide-react";
+import { CalendarDays, Filter, Users, CheckCircle2, XCircle, AlertCircle, MessageCircle } from "lucide-react";
 import { useReserva } from "@/components/admin/ReservaProvider";
 
 const RESTAURANT_ID = process.env.NEXT_PUBLIC_RESTAURANT_ID!;
@@ -133,7 +133,7 @@ export default function ReservasPage() {
           <table className="w-full">
             <thead>
               <tr style={{ borderBottom: "1px solid var(--border)" }}>
-                {["Horário", "Cliente", "Pessoas", "Mesa", "Origem", "Status"].map(h => (
+                {["Horário", "Cliente", "Pessoas", "Mesa", "Origem", "Status", ""].map(h => (
                   <th key={h} className="text-left text-xs font-medium px-5 py-3" style={{ color: "var(--foreground-muted)" }}>{h}</th>
                 ))}
               </tr>
@@ -172,6 +172,11 @@ export default function ReservasPage() {
                     </td>
                     <td className="px-5 py-3">
                       <span className="text-xs font-medium" style={{ color: s.color }}>{s.label}</span>
+                    </td>
+                    <td className="px-5 py-3">
+                      {r.confirmToken && (
+                        <MessageCircle size={14} title="WhatsApp enviado" style={{ color: "#25d366" }} />
+                      )}
                     </td>
                   </tr>
                 );

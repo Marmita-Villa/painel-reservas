@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { formatName } from "@/lib/utils";
+import { generateToken } from "@/lib/tokens";
+import { sendReservationConfirmation } from "@/lib/notifications";
 
 // São Paulo is UTC-3
 const TZ_OFFSET = -3;
@@ -68,6 +70,9 @@ export async function POST(req: NextRequest) {
     // Build datetime in São Paulo timezone → store as UTC
     const reservationDate = toSaoPauloDate(date, time);
 
+    const confirmToken = generateToken();
+    const cancelToken = generateToken();
+
     const reservation = await prisma.reservation.create({
       data: {
         restaurantId,
@@ -78,14 +83,29 @@ export async function POST(req: NextRequest) {
         occasion: occasion || null,
         origin,
         status: "CONFIRMED",
+        confirmToken,
+        cancelToken,
       },
-      include: { customer: true },
+      include: { customer: true, restaurant: true },
     });
 
     await prisma.customer.update({
       where: { id: customer.id },
       data: { visitCount: { increment: 1 } },
     });
+
+    // Send WhatsApp confirmation if customer has a phone
+    if (customer.phone) {
+      sendReservationConfirmation({
+        phone: customer.phone,
+        customerName: customer.name,
+        restaurantName: reservation.restaurant.name,
+        date: reservationDate,
+        partySize: Number(partySize),
+        confirmToken,
+        cancelToken,
+      }).catch((err) => console.error('[WhatsApp] Confirmation send failed:', err));
+    }
 
     return NextResponse.json(reservation, { status: 201 });
   } catch (error) {
