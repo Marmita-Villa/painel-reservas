@@ -1,6 +1,6 @@
 "use client";
 
-import { CalendarDays, Users, Clock, TrendingUp, ArrowUpRight, DollarSign } from "lucide-react";
+import { CalendarDays, Users, Clock, TrendingUp, ArrowUpRight, DollarSign, X } from "lucide-react";
 import { formatTime } from "@/lib/utils";
 import { useRestaurant } from "@/contexts/RestaurantContext";
 import { useEffect, useState, useCallback } from "react";
@@ -40,12 +40,16 @@ interface DashboardData {
   totalPeople: number;
   birthdayGuests?: BirthdayGuest[];
   estimatedRevenue?: number;
+  plan?: string;
+  reservationsThisMonth?: number;
+  planLimit?: number;
 }
 
 export default function DashboardPage() {
   const { effectiveRestaurantId } = useRestaurant();
   const [data, setData] = useState<DashboardData | null>(null);
   const [loading, setLoading] = useState(true);
+  const [bannerDismissed, setBannerDismissed] = useState(false);
 
   const fetchData = useCallback(async () => {
     setLoading(true);
@@ -72,6 +76,10 @@ export default function DashboardPage() {
   const totalPeople = data?.totalPeople ?? 0;
   const birthdayGuests = data?.birthdayGuests ?? [];
   const estimatedRevenue = data?.estimatedRevenue ?? 0;
+  const plan = data?.plan ?? "FREE";
+  const reservationsThisMonth = data?.reservationsThisMonth ?? 0;
+  const planLimit = data?.planLimit ?? 50;
+  const showUpgradeBanner = !bannerDismissed && plan === "FREE" && planLimit > 0 && (reservationsThisMonth / planLimit) > 0.8;
   const confirmed = reservations.filter(r => r.status === "CONFIRMED").length;
   const occupied  = Math.round((totalPeople / 120) * 100);
 
@@ -120,6 +128,27 @@ export default function DashboardPage() {
               </span>
             ))}
           </div>
+        </div>
+      )}
+
+      {/* Plan upgrade banner */}
+      {showUpgradeBanner && (
+        <div
+          className="flex items-center justify-between gap-3 px-5 py-4 rounded-xl border"
+          style={{ background: "#f97316/15", borderColor: "#f9731640", backgroundColor: "rgba(249,115,22,0.1)" }}
+        >
+          <div className="flex items-center gap-3">
+            <span className="text-xl">⚡</span>
+            <span className="text-sm" style={{ color: "#c2410c" }}>
+              <span className="font-semibold">Você usou {reservationsThisMonth} de {planLimit} reservas do plano Free este mês.</span>{" "}
+              <a href="/planos" className="underline underline-offset-2 hover:opacity-80 font-semibold">
+                Faça upgrade para o Pro →
+              </a>
+            </span>
+          </div>
+          <button onClick={() => setBannerDismissed(true)} className="flex-shrink-0 opacity-50 hover:opacity-80 transition-opacity">
+            <X size={16} style={{ color: "#c2410c" }} />
+          </button>
         </div>
       )}
 

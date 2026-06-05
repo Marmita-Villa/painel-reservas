@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { formatName } from "@/lib/utils";
 import { generateToken } from "@/lib/tokens";
 import { sendReservationConfirmation } from "@/lib/notifications";
+import { isReservationLimitReached } from "@/lib/plans";
 
 // São Paulo is UTC-3
 const TZ_OFFSET = -3;
@@ -50,6 +51,35 @@ export async function POST(req: NextRequest) {
     const body = await req.json();
     const { restaurantId, name, phone, date, time, partySize, notes, occasion, origin = "WIDGET" } = body;
 
+    // Check plan reservation limit
+    const restaurant = await prisma.restaurant.findUnique({
+      where: { id: restaurantId },
+      select: { id: true, plan: true, reservationsThisMonth: true, lastReservationCountReset: true },
+    });
+
+    if (restaurant) {
+      // Check if we need to reset the monthly count
+      const now = new Date();
+      const lastReset = new Date(restaurant.lastReservationCountReset);
+      const isNewMonth = now.getFullYear() > lastReset.getFullYear() ||
+        now.getMonth() > lastReset.getMonth();
+
+      if (isNewMonth) {
+        await prisma.restaurant.update({
+          where: { id: restaurantId },
+          data: { reservationsThisMonth: 0, lastReservationCountReset: now },
+        });
+        restaurant.reservationsThisMonth = 0;
+      }
+
+      if (isReservationLimitReached(restaurant)) {
+        return NextResponse.json(
+          { error: "Limite de reservas do plano atingido. Faça upgrade para continuar.", limitReached: true },
+          { status: 400 }
+        );
+      }
+    }
+
     // Upsert customer by phone
     let customer = await prisma.customer.findFirst({ where: { restaurantId, phone } });
 
@@ -92,6 +122,12 @@ export async function POST(req: NextRequest) {
     await prisma.customer.update({
       where: { id: customer.id },
       data: { visitCount: { increment: 1 } },
+    });
+
+    // Increment monthly reservation count
+    await prisma.restaurant.update({
+      where: { id: restaurantId },
+      data: { reservationsThisMonth: { increment: 1 } },
     });
 
     // Send WhatsApp confirmation if customer has a phone

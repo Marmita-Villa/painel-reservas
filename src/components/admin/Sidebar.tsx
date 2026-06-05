@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import Logo from "@/components/Logo";
-import { LayoutDashboard, CalendarDays, Users, Clock, Map, BarChart3, Settings, PanelLeftClose, PanelLeftOpen, UserCog, Store } from "lucide-react";
+import { LayoutDashboard, CalendarDays, Users, Clock, Map, BarChart3, Settings, PanelLeftClose, PanelLeftOpen, UserCog, Store, CreditCard } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useState } from "react";
 import { useSession } from "next-auth/react";
@@ -18,6 +18,7 @@ const allNavItems = [
   { href: "/configuracoes", label: "Configurações",  icon: Settings,        roles: ["MASTER_SUPER", "ADMIN"] },
   { href: "/usuarios",      label: "Usuários",       icon: UserCog,         roles: ["MASTER_SUPER", "ADMIN"] },
   { href: "/restaurantes",  label: "Restaurantes",   icon: Store,           roles: ["MASTER_SUPER"] },
+  { href: "/planos",        label: "Planos",         icon: CreditCard,      roles: ["MASTER_SUPER"] },
 ];
 
 export default function Sidebar() {

@@ -15,6 +15,22 @@ export async function GET() {
   const restaurants = await prisma.restaurant.findMany({
     include: { _count: { select: { users: true } } },
     orderBy: { createdAt: "desc" },
+    select: {
+      id: true,
+      name: true,
+      slug: true,
+      phone: true,
+      email: true,
+      address: true,
+      isActive: true,
+      plan: true,
+      planExpiresAt: true,
+      reservationsThisMonth: true,
+      lastReservationCountReset: true,
+      createdAt: true,
+      updatedAt: true,
+      _count: { select: { users: true } },
+    },
   });
 
   return NextResponse.json(restaurants);

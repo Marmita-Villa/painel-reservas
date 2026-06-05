@@ -29,6 +29,10 @@ model Restaurant {
   logoUrl      String?
   timezone     String   @default("America/Sao_Paulo")
   isActive     Boolean  @default(true)
+  plan         String   @default("FREE")
+  planExpiresAt DateTime?
+  reservationsThisMonth Int @default(0)
+  lastReservationCountReset DateTime @default(now())
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 

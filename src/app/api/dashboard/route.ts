@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { auth } from "@/lib/auth";
+import { getPlanLimits } from "@/lib/plans";
 
 const TZ = "America/Sao_Paulo";
 
@@ -42,7 +43,7 @@ export async function GET(req: NextRequest) {
       whereWaitlist.restaurantId = restaurantId;
     }
 
-    const [reservations, waitlist, settings] = await Promise.all([
+    const [reservations, waitlist, settings, restaurantData] = await Promise.all([
       prisma.reservation.findMany({
         where: whereReservation,
         include: { customer: true, table: true },
@@ -51,6 +52,12 @@ export async function GET(req: NextRequest) {
       prisma.waitlistEntry.findMany({ where: whereWaitlist }),
       restaurantId
         ? prisma.restaurantSettings.findUnique({ where: { restaurantId } })
+        : null,
+      restaurantId
+        ? prisma.restaurant.findUnique({
+            where: { id: restaurantId },
+            select: { plan: true, reservationsThisMonth: true },
+          })
         : null,
     ]);
 
@@ -80,7 +87,11 @@ export async function GET(req: NextRequest) {
           .reduce((s, r) => s + r.partySize * averageTicket, 0)
       : 0;
 
-    return NextResponse.json({ reservations, waitlist, totalPeople, birthdayGuests, estimatedRevenue });
+    const plan = restaurantData?.plan ?? "FREE";
+    const reservationsThisMonth = restaurantData?.reservationsThisMonth ?? 0;
+    const planLimit = getPlanLimits(plan).reservationsPerMonth;
+
+    return NextResponse.json({ reservations, waitlist, totalPeople, birthdayGuests, estimatedRevenue, plan, reservationsThisMonth, planLimit });
   } catch (error) {
     console.error("GET /api/dashboard error:", error);
     return NextResponse.json({ error: "Erro ao buscar dados do dashboard" }, { status: 500 });
