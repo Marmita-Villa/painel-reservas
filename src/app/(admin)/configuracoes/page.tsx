@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import { Settings, Clock, Bell, CreditCard, Globe, Check, AlertCircle, Loader2, QrCode, Copy } from "lucide-react";
 import { useSession } from "next-auth/react";
 import { useRestaurant } from "@/contexts/RestaurantContext";
@@ -20,6 +20,42 @@ const days = ["Domingo", "Segunda", "Terça", "Quarta", "Quinta", "Sexta", "Sáb
 
 type SaveState = "idle" | "saving" | "success" | "error";
 
+interface Schedule {
+  dayOfWeek: number;
+  isActive: boolean;
+  openTime: string;
+  closeTime: string;
+  slotInterval: number;
+}
+
+interface RestaurantSettings {
+  autoConfirm: boolean;
+  reminderHoursBefore: number;
+  whatsappEnabled: boolean;
+  noShowFeeEnabled: boolean;
+  noShowFeeAmount: number | null;
+  minNoticeMinutes: number;
+  averageTicket: number | null;
+}
+
+const defaultSchedules: Schedule[] = Array.from({ length: 7 }, (_, i) => ({
+  dayOfWeek: i,
+  isActive: i > 0,
+  openTime: "12:00",
+  closeTime: "23:00",
+  slotInterval: 30,
+}));
+
+const defaultSettings: RestaurantSettings = {
+  autoConfirm: true,
+  reminderHoursBefore: 24,
+  whatsappEnabled: false,
+  noShowFeeEnabled: false,
+  noShowFeeAmount: null,
+  minNoticeMinutes: 60,
+  averageTicket: 0,
+};
+
 export default function ConfiguracoesPage() {
   const { data: session } = useSession();
   const { effectiveRestaurantId } = useRestaurant();
@@ -36,8 +72,15 @@ export default function ConfiguracoesPage() {
   const [slug, setSlug] = useState("");
   const [loadingGeral, setLoadingGeral] = useState(false);
 
-  // Pagamento fields
-  const [averageTicket, setAverageTicket] = useState<string>("");
+  // Horários
+  const [schedules, setSchedules] = useState<Schedule[]>(defaultSchedules);
+  const [loadingSchedules, setLoadingSchedules] = useState(false);
+  const [saveSchedules, setSaveSchedules] = useState<SaveState>("idle");
+
+  // Settings (shared between Notificações and Pagamento)
+  const [settings, setSettings] = useState<RestaurantSettings>(defaultSettings);
+  const [loadingSettings, setLoadingSettings] = useState(false);
+  const [saveSettings, setSaveSettings] = useState<SaveState>("idle");
 
   // Widget
   const [copied, setCopied] = useState(false);
@@ -45,7 +88,7 @@ export default function ConfiguracoesPage() {
   const qrUrl = widgetUrl ? `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(widgetUrl)}` : "";
   const embedCode = widgetUrl ? `<iframe src="${widgetUrl}" width="100%" height="700" frameborder="0" style="border-radius:12px;"></iframe>` : "";
 
-  // Load restaurant data when tab is active or restaurantId changes
+  // Load restaurant data for Geral tab
   useEffect(() => {
     if (!restaurantId) return;
     setLoadingGeral(true);
@@ -64,6 +107,37 @@ export default function ConfiguracoesPage() {
       .finally(() => setLoadingGeral(false));
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [restaurantId]);
+
+  // Load schedules when horarios tab becomes active
+  useEffect(() => {
+    if (activeTab !== "horarios" || !restaurantId) return;
+    setLoadingSchedules(true);
+    fetch(`/api/restaurants/${restaurantId}/schedules`)
+      .then((r) => r.json())
+      .then((data) => {
+        if (Array.isArray(data)) setSchedules(data);
+      })
+      .catch(() => {})
+      .finally(() => setLoadingSchedules(false));
+  }, [activeTab, restaurantId]);
+
+  // Load settings when notificacoes or pagamento tab becomes active
+  useEffect(() => {
+    if (activeTab !== "notificacoes" && activeTab !== "pagamento") return;
+    if (!restaurantId) return;
+    setLoadingSettings(true);
+    fetch(`/api/restaurants/${restaurantId}/settings`)
+      .then((r) => r.json())
+      .then((data) => {
+        if (!data.error) setSettings(data);
+      })
+      .catch(() => {})
+      .finally(() => setLoadingSettings(false));
+  }, [activeTab, restaurantId]);
+
+  function updateSchedule(index: number, field: keyof Schedule, value: any) {
+    setSchedules((prev) => prev.map((s, i) => i === index ? { ...s, [field]: value } : s));
+  }
 
   async function saveGeral() {
     if (!restaurantId) return;
@@ -87,6 +161,50 @@ export default function ConfiguracoesPage() {
     }
   }
 
+  async function saveHorarios() {
+    if (!restaurantId) return;
+    setSaveSchedules("saving");
+    try {
+      const res = await fetch(`/api/restaurants/${restaurantId}/schedules`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(schedules),
+      });
+      if (res.ok) {
+        setSaveSchedules("success");
+        setTimeout(() => setSaveSchedules("idle"), 3000);
+      } else {
+        setSaveSchedules("error");
+        setTimeout(() => setSaveSchedules("idle"), 3000);
+      }
+    } catch {
+      setSaveSchedules("error");
+      setTimeout(() => setSaveSchedules("idle"), 3000);
+    }
+  }
+
+  async function saveSettingsData() {
+    if (!restaurantId) return;
+    setSaveSettings("saving");
+    try {
+      const res = await fetch(`/api/restaurants/${restaurantId}/settings`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(settings),
+      });
+      if (res.ok) {
+        setSaveSettings("success");
+        setTimeout(() => setSaveSettings("idle"), 3000);
+      } else {
+        setSaveSettings("error");
+        setTimeout(() => setSaveSettings("idle"), 3000);
+      }
+    } catch {
+      setSaveSettings("error");
+      setTimeout(() => setSaveSettings("idle"), 3000);
+    }
+  }
+
   function handleCopyUrl() {
     if (!widgetUrl) return;
     navigator.clipboard.writeText(widgetUrl).then(() => {
@@ -103,6 +221,27 @@ export default function ConfiguracoesPage() {
     a.target = "_blank";
     a.click();
   }
+
+  const slotIntervalOptions = [
+    { value: 30, label: "30 min" },
+    { value: 60, label: "1 hora" },
+    { value: 120, label: "2 horas" },
+  ];
+
+  const reminderOptions = [
+    { value: 2, label: "2 horas antes" },
+    { value: 6, label: "6 horas antes" },
+    { value: 12, label: "12 horas antes" },
+    { value: 24, label: "24 horas antes" },
+    { value: 48, label: "48 horas antes" },
+  ];
+
+  const cancellationOptions = [
+    { value: 120, label: "2 horas antes" },
+    { value: 240, label: "4 horas antes" },
+    { value: 1440, label: "24 horas antes" },
+    { value: 2880, label: "48 horas antes" },
+  ];
 
   return (
     <div className="space-y-6">
@@ -244,37 +383,81 @@ export default function ConfiguracoesPage() {
               style={{ background: "var(--surface)", borderColor: "var(--border)" }}
             >
               <h2 className="font-semibold" style={{ color: "var(--foreground)" }}>Horários de Funcionamento</h2>
-              <div className="space-y-3">
-                {days.map((day, i) => (
-                  <div key={day} className="flex items-center gap-4">
-                    <div className="w-24 text-sm" style={{ color: "var(--foreground)" }}>{day}</div>
-                    <input
-                      type="checkbox"
-                      defaultChecked={i > 0 && i < 7}
-                      className="accent-purple-500"
-                    />
-                    <input
-                      type="time"
-                      defaultValue="12:00"
-                      className="px-2 py-1.5 rounded-lg text-sm outline-none"
-                      style={{ background: "var(--surface-2)", border: "1px solid var(--border)", color: "var(--foreground)" }}
-                    />
-                    <span style={{ color: "var(--foreground-muted)" }}>até</span>
-                    <input
-                      type="time"
-                      defaultValue="23:00"
-                      className="px-2 py-1.5 rounded-lg text-sm outline-none"
-                      style={{ background: "var(--surface-2)", border: "1px solid var(--border)", color: "var(--foreground)" }}
-                    />
+
+              {loadingSchedules ? (
+                <div className="flex items-center gap-2 py-4" style={{ color: "var(--foreground-muted)" }}>
+                  <Loader2 size={16} className="animate-spin" />
+                  <span className="text-sm">Carregando horários...</span>
+                </div>
+              ) : (
+                <>
+                  <div className="space-y-3">
+                    {schedules.map((s, i) => (
+                      <div key={s.dayOfWeek} className="flex items-center gap-4 flex-wrap">
+                        <div className="w-24 text-sm" style={{ color: "var(--foreground)" }}>{days[i]}</div>
+                        <input
+                          type="checkbox"
+                          checked={s.isActive}
+                          onChange={(e) => updateSchedule(i, "isActive", e.target.checked)}
+                          className="accent-purple-500"
+                        />
+                        <input
+                          type="time"
+                          value={s.openTime}
+                          onChange={(e) => updateSchedule(i, "openTime", e.target.value)}
+                          disabled={!s.isActive}
+                          className="px-2 py-1.5 rounded-lg text-sm outline-none disabled:opacity-40"
+                          style={{ background: "var(--surface-2)", border: "1px solid var(--border)", color: "var(--foreground)" }}
+                        />
+                        <span style={{ color: "var(--foreground-muted)" }}>até</span>
+                        <input
+                          type="time"
+                          value={s.closeTime}
+                          onChange={(e) => updateSchedule(i, "closeTime", e.target.value)}
+                          disabled={!s.isActive}
+                          className="px-2 py-1.5 rounded-lg text-sm outline-none disabled:opacity-40"
+                          style={{ background: "var(--surface-2)", border: "1px solid var(--border)", color: "var(--foreground)" }}
+                        />
+                        <select
+                          value={s.slotInterval}
+                          onChange={(e) => updateSchedule(i, "slotInterval", Number(e.target.value))}
+                          disabled={!s.isActive}
+                          className="px-2 py-1.5 rounded-lg text-sm outline-none disabled:opacity-40"
+                          style={{ background: "var(--surface-2)", border: "1px solid var(--border)", color: "var(--foreground)" }}
+                        >
+                          {slotIntervalOptions.map((o) => (
+                            <option key={o.value} value={o.value}>{o.label}</option>
+                          ))}
+                        </select>
+                      </div>
+                    ))}
                   </div>
-                ))}
-              </div>
-              <button
-                className="px-5 py-2.5 rounded-lg text-sm font-medium text-white mt-2"
-                style={{ background: "var(--primary)" }}
-              >
-                Salvar horários
-              </button>
+                  <div className="flex items-center gap-3 pt-2">
+                    <button
+                      onClick={saveHorarios}
+                      disabled={saveSchedules === "saving"}
+                      className="flex items-center gap-2 px-5 py-2.5 rounded-lg text-sm font-medium text-white disabled:opacity-60"
+                      style={{ background: "var(--primary)" }}
+                    >
+                      {saveSchedules === "saving" ? (
+                        <><Loader2 size={14} className="animate-spin" /> Salvando...</>
+                      ) : (
+                        "Salvar horários"
+                      )}
+                    </button>
+                    {saveSchedules === "success" && (
+                      <span className="flex items-center gap-1.5 text-sm" style={{ color: "var(--success)" }}>
+                        <Check size={14} /> Salvo com sucesso!
+                      </span>
+                    )}
+                    {saveSchedules === "error" && (
+                      <span className="flex items-center gap-1.5 text-sm" style={{ color: "var(--danger)" }}>
+                        <AlertCircle size={14} /> Erro ao salvar. Tente novamente.
+                      </span>
+                    )}
+                  </div>
+                </>
+              )}
             </div>
           )}
 
@@ -284,20 +467,89 @@ export default function ConfiguracoesPage() {
               style={{ background: "var(--surface)", borderColor: "var(--border)" }}
             >
               <h2 className="font-semibold" style={{ color: "var(--foreground)" }}>Notificações Automáticas</h2>
-              {[
-                { label: "Lembrete de reserva", desc: "Enviar lembrete ao cliente antes da reserva", defaultChecked: true },
-                { label: "Confirmação automática", desc: "Confirmar reserva online automaticamente", defaultChecked: true },
-                { label: "Aviso de no-show", desc: "Notificar equipe sobre possível no-show", defaultChecked: false },
-                { label: "WhatsApp ativo", desc: "Usar WhatsApp Business para notificações", defaultChecked: false },
-              ].map((item) => (
-                <div key={item.label} className="flex items-start justify-between gap-4">
-                  <div>
-                    <p className="text-sm font-medium" style={{ color: "var(--foreground)" }}>{item.label}</p>
-                    <p className="text-xs mt-0.5" style={{ color: "var(--foreground-muted)" }}>{item.desc}</p>
-                  </div>
-                  <input type="checkbox" defaultChecked={item.defaultChecked} className="accent-purple-500 mt-1" />
+
+              {loadingSettings ? (
+                <div className="flex items-center gap-2 py-4" style={{ color: "var(--foreground-muted)" }}>
+                  <Loader2 size={16} className="animate-spin" />
+                  <span className="text-sm">Carregando configurações...</span>
                 </div>
-              ))}
+              ) : (
+                <>
+                  {/* Confirmação automática */}
+                  <div className="flex items-start justify-between gap-4">
+                    <div>
+                      <p className="text-sm font-medium" style={{ color: "var(--foreground)" }}>Confirmação automática</p>
+                      <p className="text-xs mt-0.5" style={{ color: "var(--foreground-muted)" }}>Confirmar reserva online automaticamente</p>
+                    </div>
+                    <input
+                      type="checkbox"
+                      checked={settings.autoConfirm}
+                      onChange={(e) => setSettings((s) => ({ ...s, autoConfirm: e.target.checked }))}
+                      className="accent-purple-500 mt-1"
+                    />
+                  </div>
+
+                  {/* Lembrete de reserva */}
+                  <div className="flex items-start justify-between gap-4">
+                    <div className="flex-1">
+                      <p className="text-sm font-medium" style={{ color: "var(--foreground)" }}>Lembrete de reserva</p>
+                      <p className="text-xs mt-0.5" style={{ color: "var(--foreground-muted)" }}>Enviar lembrete ao cliente antes da reserva</p>
+                      <select
+                        value={settings.reminderHoursBefore}
+                        onChange={(e) => setSettings((s) => ({ ...s, reminderHoursBefore: Number(e.target.value) }))}
+                        className="mt-2 px-3 py-1.5 rounded-lg text-sm outline-none"
+                        style={{ background: "var(--surface-2)", border: "1px solid var(--border)", color: "var(--foreground)" }}
+                      >
+                        {reminderOptions.map((o) => (
+                          <option key={o.value} value={o.value}>{o.label}</option>
+                        ))}
+                      </select>
+                    </div>
+                  </div>
+
+                  {/* WhatsApp */}
+                  <div className="flex items-start justify-between gap-4">
+                    <div>
+                      <p className="text-sm font-medium" style={{ color: "var(--foreground)" }}>WhatsApp ativo</p>
+                      <p className="text-xs mt-0.5" style={{ color: "var(--foreground-muted)" }}>
+                        Usar WhatsApp Business para notificações.{" "}
+                        <span style={{ color: "var(--primary)" }}>Configure as chaves da API na aba Integrações</span>
+                      </p>
+                    </div>
+                    <input
+                      type="checkbox"
+                      checked={settings.whatsappEnabled}
+                      onChange={(e) => setSettings((s) => ({ ...s, whatsappEnabled: e.target.checked }))}
+                      className="accent-purple-500 mt-1"
+                    />
+                  </div>
+
+                  <div className="flex items-center gap-3 pt-2">
+                    <button
+                      onClick={saveSettingsData}
+                      disabled={saveSettings === "saving"}
+                      className="flex items-center gap-2 px-5 py-2.5 rounded-lg text-sm font-medium text-white disabled:opacity-60"
+                      style={{ background: "var(--primary)" }}
+                    >
+                      {saveSettings === "saving" ? (
+                        <><Loader2 size={14} className="animate-spin" /> Salvando...</>
+                      ) : (
+                        "Salvar configurações"
+                      )}
+                    </button>
+                    {saveSettings === "success" && (
+                      <span className="flex items-center gap-1.5 text-sm" style={{ color: "var(--success)" }}>
+                        <Check size={14} /> Salvo com sucesso!
+                      </span>
+                    )}
+                    {saveSettings === "error" && (
+                      <span className="flex items-center gap-1.5 text-sm" style={{ color: "var(--danger)" }}>
+                        <AlertCircle size={14} /> Erro ao salvar. Tente novamente.
+                      </span>
+                    )}
+                  </div>
+                </>
+              )}
             </div>
           )}
 
@@ -307,97 +559,173 @@ export default function ConfiguracoesPage() {
               style={{ background: "var(--surface)", borderColor: "var(--border)" }}
             >
               <h2 className="font-semibold" style={{ color: "var(--foreground)" }}>Garantia de Reserva (No-Show)</h2>
-              <div className="flex items-start justify-between gap-4">
-                <div>
-                  <p className="text-sm font-medium" style={{ color: "var(--foreground)" }}>Ativar taxa de no-show</p>
-                  <p className="text-xs mt-0.5" style={{ color: "var(--foreground-muted)" }}>
-                    Cobrar um valor do cliente caso não compareça
-                  </p>
+
+              {loadingSettings ? (
+                <div className="flex items-center gap-2 py-4" style={{ color: "var(--foreground-muted)" }}>
+                  <Loader2 size={16} className="animate-spin" />
+                  <span className="text-sm">Carregando configurações...</span>
                 </div>
-                <input type="checkbox" className="accent-purple-500 mt-1" />
-              </div>
-              <div>
-                <label className="block text-sm mb-1.5" style={{ color: "var(--foreground-muted)" }}>
-                  Valor da taxa (R$)
-                </label>
-                <input
-                  type="number"
-                  placeholder="Ex: 50.00"
-                  className="w-40 px-3 py-2.5 rounded-lg text-sm outline-none"
-                  style={{ background: "var(--surface-2)", border: "1px solid var(--border)", color: "var(--foreground)" }}
-                />
-              </div>
-              <div>
-                <label className="block text-sm mb-1.5" style={{ color: "var(--foreground-muted)" }}>
-                  Prazo de cancelamento gratuito
-                </label>
-                <select
-                  className="px-3 py-2.5 rounded-lg text-sm outline-none"
-                  style={{ background: "var(--surface-2)", border: "1px solid var(--border)", color: "var(--foreground)" }}
-                >
-                  <option>2 horas antes</option>
-                  <option>4 horas antes</option>
-                  <option>24 horas antes</option>
-                  <option>48 horas antes</option>
-                </select>
-              </div>
-              <div>
-                <label className="block text-sm mb-1.5" style={{ color: "var(--foreground-muted)" }}>
-                  Ticket médio por pessoa (R$)
-                </label>
-                <input
-                  type="number"
-                  placeholder="Ex: 85.00"
-                  value={averageTicket}
-                  onChange={(e) => setAverageTicket(e.target.value)}
-                  className="w-40 px-3 py-2.5 rounded-lg text-sm outline-none"
-                  style={{ background: "var(--surface-2)", border: "1px solid var(--border)", color: "var(--foreground)" }}
-                />
-                <p className="text-xs mt-1" style={{ color: "var(--foreground-muted)" }}>
-                  Usado para calcular a receita estimada no dashboard
-                </p>
-              </div>
-              <button
-                className="px-5 py-2.5 rounded-lg text-sm font-medium text-white"
-                style={{ background: "var(--primary)" }}
-              >
-                Salvar configurações
-              </button>
+              ) : (
+                <>
+                  <div className="flex items-start justify-between gap-4">
+                    <div>
+                      <p className="text-sm font-medium" style={{ color: "var(--foreground)" }}>Ativar taxa de no-show</p>
+                      <p className="text-xs mt-0.5" style={{ color: "var(--foreground-muted)" }}>
+                        Cobrar um valor do cliente caso não compareça
+                      </p>
+                    </div>
+                    <input
+                      type="checkbox"
+                      checked={settings.noShowFeeEnabled}
+                      onChange={(e) => setSettings((s) => ({ ...s, noShowFeeEnabled: e.target.checked }))}
+                      className="accent-purple-500 mt-1"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm mb-1.5" style={{ color: "var(--foreground-muted)" }}>
+                      Valor da taxa (R$)
+                    </label>
+                    <input
+                      type="number"
+                      placeholder="Ex: 50.00"
+                      value={settings.noShowFeeAmount ?? ""}
+                      onChange={(e) => setSettings((s) => ({ ...s, noShowFeeAmount: e.target.value === "" ? null : Number(e.target.value) }))}
+                      disabled={!settings.noShowFeeEnabled}
+                      className="w-40 px-3 py-2.5 rounded-lg text-sm outline-none disabled:opacity-40"
+                      style={{ background: "var(--surface-2)", border: "1px solid var(--border)", color: "var(--foreground)" }}
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm mb-1.5" style={{ color: "var(--foreground-muted)" }}>
+                      Prazo de cancelamento gratuito
+                    </label>
+                    <select
+                      value={settings.minNoticeMinutes}
+                      onChange={(e) => setSettings((s) => ({ ...s, minNoticeMinutes: Number(e.target.value) }))}
+                      className="px-3 py-2.5 rounded-lg text-sm outline-none"
+                      style={{ background: "var(--surface-2)", border: "1px solid var(--border)", color: "var(--foreground)" }}
+                    >
+                      {cancellationOptions.map((o) => (
+                        <option key={o.value} value={o.value}>{o.label}</option>
+                      ))}
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-sm mb-1.5" style={{ color: "var(--foreground-muted)" }}>
+                      Ticket médio por pessoa (R$)
+                    </label>
+                    <input
+                      type="number"
+                      placeholder="Ex: 85.00"
+                      value={settings.averageTicket ?? ""}
+                      onChange={(e) => setSettings((s) => ({ ...s, averageTicket: e.target.value === "" ? null : Number(e.target.value) }))}
+                      className="w-40 px-3 py-2.5 rounded-lg text-sm outline-none"
+                      style={{ background: "var(--surface-2)", border: "1px solid var(--border)", color: "var(--foreground)" }}
+                    />
+                    <p className="text-xs mt-1" style={{ color: "var(--foreground-muted)" }}>
+                      Usado para calcular a receita estimada no dashboard
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <button
+                      onClick={saveSettingsData}
+                      disabled={saveSettings === "saving"}
+                      className="flex items-center gap-2 px-5 py-2.5 rounded-lg text-sm font-medium text-white disabled:opacity-60"
+                      style={{ background: "var(--primary)" }}
+                    >
+                      {saveSettings === "saving" ? (
+                        <><Loader2 size={14} className="animate-spin" /> Salvando...</>
+                      ) : (
+                        "Salvar configurações"
+                      )}
+                    </button>
+                    {saveSettings === "success" && (
+                      <span className="flex items-center gap-1.5 text-sm" style={{ color: "var(--success)" }}>
+                        <Check size={14} /> Salvo com sucesso!
+                      </span>
+                    )}
+                    {saveSettings === "error" && (
+                      <span className="flex items-center gap-1.5 text-sm" style={{ color: "var(--danger)" }}>
+                        <AlertCircle size={14} /> Erro ao salvar. Tente novamente.
+                      </span>
+                    )}
+                  </div>
+                </>
+              )}
             </div>
           )}
 
           {activeTab === "integracoes" && (
-            <div
-              className="rounded-xl border p-6 space-y-4"
-              style={{ background: "var(--surface)", borderColor: "var(--border)" }}
-            >
-              <h2 className="font-semibold" style={{ color: "var(--foreground)" }}>Integrações</h2>
-              {[
-                { name: "Google Reserve", desc: "Aceitar reservas direto do Google Meu Negócio", connected: true },
-                { name: "WhatsApp Business", desc: "Enviar confirmações e lembretes via WhatsApp", connected: false },
-                { name: "Instagram", desc: "Link de reservas na bio e stories", connected: false },
-                { name: "iFood", desc: "Sincronizar disponibilidade com o iFood", connected: false },
-              ].map((integ) => (
-                <div
-                  key={integ.name}
-                  className="flex items-center justify-between p-4 rounded-lg border"
-                  style={{ borderColor: "var(--border)", background: "var(--surface-2)" }}
-                >
-                  <div>
-                    <p className="text-sm font-medium" style={{ color: "var(--foreground)" }}>{integ.name}</p>
-                    <p className="text-xs mt-0.5" style={{ color: "var(--foreground-muted)" }}>{integ.desc}</p>
-                  </div>
-                  <button
-                    className="px-4 py-1.5 rounded-lg text-xs font-medium transition-opacity hover:opacity-80"
-                    style={{
-                      background: integ.connected ? "var(--success)20" : "var(--primary)",
-                      color: integ.connected ? "var(--success)" : "white",
-                    }}
+            <div className="space-y-4">
+              <div
+                className="rounded-xl border p-6 space-y-4"
+                style={{ background: "var(--surface)", borderColor: "var(--border)" }}
+              >
+                <h2 className="font-semibold" style={{ color: "var(--foreground)" }}>Integrações</h2>
+                {[
+                  { name: "Google Reserve", desc: "Aceitar reservas direto do Google Meu Negócio", connected: true },
+                  {
+                    name: "WhatsApp Business",
+                    desc: "Enviar confirmações e lembretes via WhatsApp",
+                    connected: settings.whatsappEnabled,
+                  },
+                  { name: "Instagram", desc: "Link de reservas na bio e stories", connected: false },
+                  { name: "iFood", desc: "Sincronizar disponibilidade com o iFood", connected: false },
+                ].map((integ) => (
+                  <div
+                    key={integ.name}
+                    className="flex items-center justify-between p-4 rounded-lg border"
+                    style={{ borderColor: "var(--border)", background: "var(--surface-2)" }}
                   >
-                    {integ.connected ? "Conectado" : "Conectar"}
-                  </button>
+                    <div>
+                      <p className="text-sm font-medium" style={{ color: "var(--foreground)" }}>{integ.name}</p>
+                      <p className="text-xs mt-0.5" style={{ color: "var(--foreground-muted)" }}>{integ.desc}</p>
+                    </div>
+                    <button
+                      className="px-4 py-1.5 rounded-lg text-xs font-medium transition-opacity hover:opacity-80"
+                      style={{
+                        background: integ.connected ? "var(--success)20" : "var(--primary)",
+                        color: integ.connected ? "var(--success)" : "white",
+                      }}
+                    >
+                      {integ.connected ? "Conectado" : "Conectar"}
+                    </button>
+                  </div>
+                ))}
+              </div>
+
+              {/* WhatsApp Business API configuration */}
+              <div
+                className="rounded-xl border p-6 space-y-4"
+                style={{ background: "var(--surface)", borderColor: "var(--border)" }}
+              >
+                <div className="flex items-center gap-3">
+                  <h3 className="font-semibold" style={{ color: "var(--foreground)" }}>WhatsApp Business API</h3>
+                  {settings.whatsappEnabled && (
+                    <span
+                      className="px-2 py-0.5 rounded-full text-xs font-medium"
+                      style={{ background: "var(--success)20", color: "var(--success)" }}
+                    >
+                      Ativo
+                    </span>
+                  )}
                 </div>
-              ))}
+                <div>
+                  <label className="block text-sm mb-1.5" style={{ color: "var(--foreground-muted)" }}>
+                    WHATSAPP_PHONE_NUMBER_ID
+                  </label>
+                  <input
+                    type="password"
+                    placeholder="••••••••••••••••"
+                    className="w-full max-w-sm px-3 py-2.5 rounded-lg text-sm outline-none"
+                    style={{ background: "var(--surface-2)", border: "1px solid var(--border)", color: "var(--foreground)" }}
+                    readOnly
+                  />
+                  <p className="text-xs mt-1.5" style={{ color: "var(--foreground-muted)" }}>
+                    Configure as variáveis de ambiente no servidor. Ative o WhatsApp na aba Notificações.
+                  </p>
+                </div>
+              </div>
             </div>
           )}
 
