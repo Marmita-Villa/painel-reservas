@@ -2,9 +2,11 @@ import { NextRequest, NextResponse } from "next/server";
 import Stripe from "stripe";
 import { auth } from "@/lib/auth";
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY ?? "", {
-  apiVersion: "2026-05-27.dahlia",
-});
+function getStripe() {
+  const key = process.env.STRIPE_SECRET_KEY;
+  if (!key) return null;
+  return new Stripe(key, { apiVersion: "2026-05-27.dahlia" });
+}
 
 const PRICE_IDS: Record<string, string> = {
   PRO:     process.env.STRIPE_PRICE_PRO     ?? "",
@@ -20,7 +22,8 @@ export async function POST(req: NextRequest) {
   const restaurantId = user.restaurantId;
   if (!restaurantId) return NextResponse.json({ error: "Sem restaurante" }, { status: 400 });
 
-  if (!process.env.STRIPE_SECRET_KEY) {
+  const stripe = getStripe();
+  if (!stripe) {
     return NextResponse.json({ error: "Stripe não configurado" }, { status: 503 });
   }
 
