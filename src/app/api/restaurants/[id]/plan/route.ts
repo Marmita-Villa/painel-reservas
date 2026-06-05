@@ -3,7 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { auth } from "@/lib/auth";
 
 // PUT /api/restaurants/[id]/plan — MASTER_SUPER only
-export async function PUT(req: NextRequest, { params }: { params: { id: string } }) {
+export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const session = await auth();
   const role = (session?.user as any)?.role;
 
@@ -12,6 +12,7 @@ export async function PUT(req: NextRequest, { params }: { params: { id: string }
   }
 
   try {
+    const { id } = await params;
     const body = await req.json();
     const { plan } = body;
 
@@ -20,7 +21,7 @@ export async function PUT(req: NextRequest, { params }: { params: { id: string }
     }
 
     const restaurant = await prisma.restaurant.update({
-      where: { id: params.id },
+      where: { id },
       data: { plan },
     });
 
