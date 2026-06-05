@@ -3,10 +3,11 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import Logo from "@/components/Logo";
-import { LayoutDashboard, CalendarDays, Users, Clock, Map, BarChart3, Settings, PanelLeftClose, PanelLeftOpen, UserCog, Store, CreditCard } from "lucide-react";
+import { LayoutDashboard, CalendarDays, Users, Clock, Map, BarChart3, Settings, PanelLeftClose, PanelLeftOpen, UserCog, Store, CreditCard, Zap } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useState } from "react";
 import { useSession } from "next-auth/react";
+import { useRestaurant } from "@/contexts/RestaurantContext";
 
 const allNavItems = [
   { href: "/dashboard",     label: "Dashboard",      icon: LayoutDashboard, roles: ["MASTER_SUPER", "ADMIN", "GERENTE", "USUARIO"] },
@@ -25,7 +26,10 @@ export default function Sidebar() {
   const pathname = usePathname();
   const [collapsed, setCollapsed] = useState(false);
   const { data: session } = useSession();
+  const { restaurant } = useRestaurant();
   const role = (session?.user as any)?.role ?? "USUARIO";
+  const plan = (restaurant as any)?.plan ?? "FREE";
+  const showUpgrade = role !== "MASTER_SUPER" && plan === "FREE";
 
   const navItems = allNavItems.filter(item => item.roles.includes(role));
 
@@ -65,6 +69,16 @@ export default function Sidebar() {
           );
         })}
       </nav>
+
+      {/* Upgrade banner */}
+      {showUpgrade && !collapsed && (
+        <Link href="/upgrade"
+          className="mx-3 mb-3 flex items-center gap-2 px-3 py-2.5 rounded-xl text-xs font-semibold transition-all hover:opacity-90"
+          style={{ background: "linear-gradient(135deg,#f07316,#e55a00)", color: "#fff" }}>
+          <Zap size={13} />
+          Fazer upgrade
+        </Link>
+      )}
 
       {/* Collapse */}
       <button onClick={() => setCollapsed(!collapsed)}

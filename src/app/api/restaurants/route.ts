@@ -13,7 +13,6 @@ export async function GET() {
   }
 
   const restaurants = await prisma.restaurant.findMany({
-    include: { _count: { select: { users: true } } },
     orderBy: { createdAt: "desc" },
     select: {
       id: true,

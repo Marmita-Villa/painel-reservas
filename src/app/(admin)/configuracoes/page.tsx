@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { Settings, Clock, Bell, CreditCard, Globe, Check, AlertCircle, Loader2, QrCode, Copy } from "lucide-react";
 import { useSession } from "next-auth/react";
 import { useRestaurant } from "@/contexts/RestaurantContext";
+import PlanGate from "@/components/admin/PlanGate";
 
 const BASE_URL = process.env.NEXT_PUBLIC_URL ?? (typeof window !== "undefined" ? window.location.origin : "https://painel-reservas.onrender.com");
 
@@ -508,21 +509,23 @@ export default function ConfiguracoesPage() {
                   </div>
 
                   {/* WhatsApp */}
-                  <div className="flex items-start justify-between gap-4">
-                    <div>
-                      <p className="text-sm font-medium" style={{ color: "var(--foreground)" }}>WhatsApp ativo</p>
-                      <p className="text-xs mt-0.5" style={{ color: "var(--foreground-muted)" }}>
-                        Usar WhatsApp Business para notificações.{" "}
-                        <span style={{ color: "var(--primary)" }}>Configure as chaves da API na aba Integrações</span>
-                      </p>
+                  <PlanGate requiredPlan="PRO" feature="WhatsApp automático de confirmações e lembretes">
+                    <div className="flex items-start justify-between gap-4">
+                      <div>
+                        <p className="text-sm font-medium" style={{ color: "var(--foreground)" }}>WhatsApp ativo</p>
+                        <p className="text-xs mt-0.5" style={{ color: "var(--foreground-muted)" }}>
+                          Usar WhatsApp Business para notificações.{" "}
+                          <span style={{ color: "var(--primary)" }}>Configure as chaves da API na aba Integrações</span>
+                        </p>
+                      </div>
+                      <input
+                        type="checkbox"
+                        checked={settings.whatsappEnabled}
+                        onChange={(e) => setSettings((s) => ({ ...s, whatsappEnabled: e.target.checked }))}
+                        className="accent-purple-500 mt-1"
+                      />
                     </div>
-                    <input
-                      type="checkbox"
-                      checked={settings.whatsappEnabled}
-                      onChange={(e) => setSettings((s) => ({ ...s, whatsappEnabled: e.target.checked }))}
-                      className="accent-purple-500 mt-1"
-                    />
-                  </div>
+                  </PlanGate>
 
                   <div className="flex items-center gap-3 pt-2">
                     <button

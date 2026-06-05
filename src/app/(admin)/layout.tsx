@@ -2,6 +2,7 @@ import Sidebar from "@/components/admin/Sidebar";
 import Header from "@/components/admin/Header";
 import { ReservaProvider } from "@/components/admin/ReservaProvider";
 import SessionWrapper from "@/components/admin/SessionWrapper";
+import OnboardingCheck from "@/components/admin/OnboardingCheck";
 import { RestaurantProvider } from "@/contexts/RestaurantContext";
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
@@ -9,6 +10,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     <SessionWrapper>
       <RestaurantProvider>
         <ReservaProvider>
+          <OnboardingCheck />
           <div className="flex h-screen overflow-hidden" style={{ background: "var(--background)" }}>
             <Sidebar />
             <div className="flex flex-col flex-1 overflow-hidden">
