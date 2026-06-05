@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from "react";
 import { CalendarDays, Filter, Users, CheckCircle2, XCircle, AlertCircle, MessageCircle, List, LayoutList, Calendar, ChevronLeft, ChevronRight } from "lucide-react";
 import { useReserva } from "@/components/admin/ReservaProvider";
 import { useRestaurant } from "@/contexts/RestaurantContext";
+import ReservationDrawer from "@/components/admin/ReservationDrawer";
 
 const statusConfig: Record<string, { label: string; color: string }> = {
   CONFIRMED: { label: "Confirmado", color: "var(--info)" },
@@ -323,6 +324,7 @@ export default function ReservasPage() {
   const [reservations, setReservations] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const [viewMode, setViewMode] = useState<ViewMode>("list");
+  const [selectedReservation, setSelectedReservation] = useState<any | null>(null);
 
   const fetchReservations = useCallback(async () => {
     setLoading(true);
@@ -357,7 +359,18 @@ export default function ReservasPage() {
     { key: "calendar", icon: <Calendar size={15} />,   label: "Calendário" },
   ];
 
+  function handleStatusChange(id: string, newStatus: string) {
+    setReservations(prev => prev.map(r => r.id === id ? { ...r, status: newStatus } : r));
+    setSelectedReservation((prev: any) => prev?.id === id ? { ...prev, status: newStatus } : prev);
+  }
+
   return (
+    <>
+    <ReservationDrawer
+      reservation={selectedReservation}
+      onClose={() => setSelectedReservation(null)}
+      onStatusChange={handleStatusChange}
+    />
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
@@ -444,6 +457,7 @@ export default function ReservasPage() {
       {viewMode === "calendar" ? (
         <CalendarView restaurantId={effectiveRestaurantId ?? null} onSelectDay={handleCalendarSelectDay} />
       ) : viewMode === "timeline" ? (
+
         loading ? (
           <div className="p-10 text-center" style={{ color: "var(--foreground-muted)" }}>
             <div className="animate-spin w-8 h-8 border-2 border-current border-t-transparent rounded-full mx-auto mb-3" />
@@ -479,6 +493,7 @@ export default function ReservasPage() {
                   const s = statusConfig[r.status] ?? statusConfig.CONFIRMED;
                   return (
                     <tr key={r.id} className="hover:opacity-80 cursor-pointer"
+                      onClick={() => setSelectedReservation(r)}
                       style={{ borderBottom: i < filtered.length - 1 ? "1px solid var(--border)" : undefined }}>
                       <td className="px-5 py-3">
                         <span className="font-mono text-sm font-medium" style={{ color: "var(--foreground)" }}>
@@ -523,5 +538,6 @@ export default function ReservasPage() {
         </div>
       )}
     </div>
+    </>
   );
 }

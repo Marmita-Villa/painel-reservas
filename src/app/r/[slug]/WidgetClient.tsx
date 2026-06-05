@@ -7,7 +7,7 @@ import { cn, formatName } from "@/lib/utils";
 interface Restaurant {
   id: string; slug: string; name: string; description: string;
   address: string; coverUrl: string | null; logoUrl: string | null;
-  primaryColor: string; phone: string;
+  primaryColor: string; phone: string; email?: string; totalSlots?: number;
   availableSlots: { date: string; times: string[] }[];
 }
 
@@ -120,28 +120,63 @@ export default function WidgetClient({ restaurant }: { restaurant: Restaurant })
         {/* ── INÍCIO ── */}
         {step==="inicio" && (
           <div className="overflow-hidden rounded-2xl border shadow-md" style={{background:C.sur,borderColor:C.bdr}}>
-            <div className="px-8 pt-10 pb-8 text-center border-b" style={{borderColor:C.bdr,background:`linear-gradient(135deg,${C.goldL},${C.sur})`}}>
-              <div className="w-16 h-16 rounded-2xl flex items-center justify-center text-2xl font-bold mx-auto mb-5 shadow"
+            {/* Hero */}
+            <div className="relative px-8 pt-10 pb-8 text-center border-b" style={{borderColor:C.bdr,background:`linear-gradient(135deg,${C.goldL} 0%,${C.sur} 60%)`}}>
+              <div className="w-20 h-20 rounded-2xl flex items-center justify-center text-3xl font-bold mx-auto mb-5 shadow-lg"
                 style={{background:C.gold,color:"#fff"}}>
-                {restaurant.name[0]}
+                {restaurant.logoUrl
+                  ? <img src={restaurant.logoUrl} alt={restaurant.name} className="w-full h-full object-cover rounded-2xl" />
+                  : restaurant.name[0]}
               </div>
               <h1 className="text-2xl font-bold mb-2 tracking-tight" style={{color:C.fg}}>{restaurant.name}</h1>
               <p className="text-sm leading-relaxed" style={{color:C.muted}}>{restaurant.description}</p>
+
+              {/* Stats strip */}
+              {(restaurant.totalSlots ?? 0) > 0 && (
+                <div className="flex items-center justify-center gap-1 mt-4">
+                  <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold"
+                    style={{background:C.goldB,color:"#92400e"}}>
+                    <CalendarDays size={11}/> {restaurant.availableSlots.length} dias disponíveis
+                  </span>
+                </div>
+              )}
             </div>
-            <div className="p-8 space-y-6">
-              <div className="space-y-3">
-                {[{icon:MapPin,text:restaurant.address},{icon:Phone,text:restaurant.phone}].map(({icon:Icon,text})=>(
-                  <div key={text} className="flex items-center gap-3 text-sm" style={{color:C.muted}}>
-                    <Icon size={15} style={{color:C.gold,flexShrink:0}}/> {text}
+
+            <div className="p-7 space-y-5">
+              {/* Info */}
+              <div className="space-y-2.5">
+                {restaurant.address && (
+                  <div className="flex items-start gap-3 text-sm" style={{color:C.muted}}>
+                    <MapPin size={14} style={{color:C.gold,flexShrink:0,marginTop:2}}/> {restaurant.address}
+                  </div>
+                )}
+                {restaurant.phone && (
+                  <div className="flex items-center gap-3 text-sm" style={{color:C.muted}}>
+                    <Phone size={14} style={{color:C.gold,flexShrink:0}}/> {restaurant.phone}
+                  </div>
+                )}
+              </div>
+
+              {/* Features */}
+              <div className="grid grid-cols-3 gap-2 py-1">
+                {[
+                  {label:"Confirmação", sub:"instantânea"},
+                  {label:"Gratuito",    sub:"sem taxas"},
+                  {label:"Sem cadastro",sub:"reserva rápida"},
+                ].map(f=>(
+                  <div key={f.label} className="text-center py-3 px-2 rounded-xl border"
+                    style={{background:C.sur2,borderColor:C.bdr2}}>
+                    <p className="text-xs font-semibold leading-tight" style={{color:C.fg}}>{f.label}</p>
+                    <p className="text-xs leading-tight mt-0.5" style={{color:C.dim}}>{f.sub}</p>
                   </div>
                 ))}
               </div>
+
               <button onClick={()=>setStep("data")}
                 className="w-full py-4 rounded-xl font-semibold text-base flex items-center justify-center gap-3 transition-all hover:opacity-90 active:scale-95 shadow-sm"
                 style={{background:C.gold,color:"#fff"}}>
                 <CalendarDays size={18}/> Reservar uma mesa <ArrowRight size={16}/>
               </button>
-              <p className="text-xs text-center" style={{color:C.dim}}>Confirmação instantânea · Gratuito · Sem cadastro</p>
             </div>
           </div>
         )}

@@ -9,13 +9,14 @@ export async function PATCH(
   try {
     const { id } = await params;
     const body = await req.json();
-    const { status, tableId } = body;
+    const { status, tableId, notes } = body;
 
     const reservation = await prisma.reservation.update({
       where: { id },
       data: {
-        ...(status && { status }),
+        ...(status  && { status }),
         ...(tableId && { tableId }),
+        ...(notes !== undefined && { notes: notes || null }),
       },
       include: { customer: true, table: true },
     });

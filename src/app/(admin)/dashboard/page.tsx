@@ -1,6 +1,7 @@
 "use client";
 
 import { CalendarDays, Users, Clock, TrendingUp, ArrowUpRight, DollarSign, X } from "lucide-react";
+import ReservationDrawer from "@/components/admin/ReservationDrawer";
 import { formatTime } from "@/lib/utils";
 import { useRestaurant } from "@/contexts/RestaurantContext";
 import { useEffect, useState, useCallback } from "react";
@@ -50,6 +51,7 @@ export default function DashboardPage() {
   const [data, setData] = useState<DashboardData | null>(null);
   const [loading, setLoading] = useState(true);
   const [bannerDismissed, setBannerDismissed] = useState(false);
+  const [selectedReservation, setSelectedReservation] = useState<any | null>(null);
 
   const fetchData = useCallback(async () => {
     setLoading(true);
@@ -83,7 +85,21 @@ export default function DashboardPage() {
   const confirmed = reservations.filter(r => r.status === "CONFIRMED").length;
   const occupied  = Math.round((totalPeople / 120) * 100);
 
+  function handleStatusChange(id: string, newStatus: string) {
+    setData(prev => prev ? {
+      ...prev,
+      reservations: prev.reservations.map(r => r.id === id ? { ...r, status: newStatus } : r),
+    } : prev);
+    setSelectedReservation((prev: any) => prev?.id === id ? { ...prev, status: newStatus } : prev);
+  }
+
   return (
+    <>
+    <ReservationDrawer
+      reservation={selectedReservation}
+      onClose={() => setSelectedReservation(null)}
+      onStatusChange={handleStatusChange}
+    />
     <div className="p-8 space-y-8 max-w-7xl mx-auto">
       {/* Header */}
       <div className="flex items-end justify-between">
@@ -221,6 +237,7 @@ export default function DashboardPage() {
                 const s = statusConfig[r.status] ?? statusConfig.CONFIRMED;
                 return (
                   <tr key={r.id} className="group transition-colors cursor-pointer hover:bg-white/[0.02]"
+                    onClick={() => setSelectedReservation(r)}
                     style={{ borderBottom: i < reservations.length - 1 ? "1px solid var(--border-subtle)" : undefined }}>
                     <td className="px-6 py-4">
                       <span className="font-mono text-sm font-semibold" style={{ color: "var(--foreground)" }}>
@@ -270,5 +287,6 @@ export default function DashboardPage() {
         )}
       </div>
     </div>
+    </>
   );
 }

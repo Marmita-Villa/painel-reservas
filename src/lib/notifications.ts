@@ -1,4 +1,5 @@
 import { sendWhatsApp } from './whatsapp';
+import { sendEmail, buildConfirmationEmail } from './email';
 import { prisma } from './prisma';
 
 const BASE_URL = process.env.NEXTAUTH_URL ?? 'https://painel-reservas.onrender.com';
@@ -47,6 +48,7 @@ async function sendAndLog(params: {
 
 export async function sendReservationConfirmation(params: {
   phone: string;
+  email?: string;
   customerName: string;
   restaurantName: string;
   date: Date;
@@ -57,7 +59,7 @@ export async function sendReservationConfirmation(params: {
   customerId?: string;
   reservationId?: string;
 }): Promise<boolean> {
-  const { phone, customerName, restaurantName, date, partySize, confirmToken, cancelToken, restaurantId, customerId, reservationId } = params;
+  const { phone, email, customerName, restaurantName, date, partySize, confirmToken, cancelToken, restaurantId, customerId, reservationId } = params;
   const firstName = customerName.split(' ')[0];
   const dateStr = formatDatePtBR(date);
   const timeStr = formatTimePtBR(date);
@@ -66,10 +68,22 @@ export async function sendReservationConfirmation(params: {
 
   const message = `Olá, ${firstName}! 🍽️\n\nSua reserva no *${restaurantName}* foi confirmada!\n\n📅 ${dateStr}\n⏰ ${timeStr}\n👥 ${partySize} pessoa${partySize > 1 ? 's' : ''}\n\n✅ Confirmar presença: ${confirmUrl}\n❌ Cancelar: ${cancelUrl}\n\nNos vemos em breve!`;
 
-  if (restaurantId) {
-    return sendAndLog({ phone, message, restaurantId, customerId, reservationId, type: 'CONFIRMATION' });
+  // Send via WhatsApp
+  const whatsappOk = restaurantId
+    ? await sendAndLog({ phone, message, restaurantId, customerId, reservationId, type: 'CONFIRMATION' })
+    : await sendWhatsApp(phone, message);
+
+  // Send via Email as fallback (or always if email provided)
+  if (email) {
+    const emailContent = buildConfirmationEmail({
+      customerName, restaurantName,
+      date: dateStr, time: timeStr,
+      partySize, confirmUrl, cancelUrl,
+    });
+    sendEmail({ to: email, ...emailContent }).catch(() => {});
   }
-  return sendWhatsApp(phone, message);
+
+  return whatsappOk;
 }
 
 export async function sendReminder24h(params: {
