@@ -15,6 +15,11 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "Reserva360",
   description: "Reserva360 — Sua Reserva. Nossa Solução.",
+  icons: {
+    icon: "/favicon.png",
+    apple: "/icon-192.png",
+    shortcut: "/favicon.png",
+  },
 };
 
 export const viewport = {
