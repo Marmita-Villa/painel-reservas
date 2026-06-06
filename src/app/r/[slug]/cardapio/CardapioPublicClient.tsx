@@ -2,6 +2,8 @@
 
 import { useState } from "react";
 import { UtensilsCrossed, MapPin, Phone, ChevronRight, CalendarDays } from "lucide-react";
+import { useTranslation } from "@/hooks/useTranslation";
+import LangToggle from "@/components/LangToggle";
 
 interface MenuItem {
   id: string; name: string; description?: string | null;
@@ -27,6 +29,7 @@ export default function CardapioPublicClient({
   categories: MenuCategory[];
 }) {
   const [activeCategory, setActiveCategory] = useState(categories[0]?.id ?? "");
+  const { lang, setLang, t } = useTranslation();
 
   const totalItems = categories.reduce((acc, c) => acc + c.items.length, 0);
 
@@ -44,14 +47,17 @@ export default function CardapioPublicClient({
             </div>
             <div>
               <h1 className="font-bold text-base leading-tight" style={{ color: C.fg }}>{restaurant.name}</h1>
-              <p className="text-xs" style={{ color: C.muted }}>{totalItems} itens no cardápio</p>
+              <p className="text-xs" style={{ color: C.muted }}>{totalItems} {t("itemsInMenu")}</p>
             </div>
           </div>
-          <a href={`/r/${restaurant.slug}`}
-            className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-semibold transition-all hover:opacity-80"
-            style={{ background: C.gold, color: "#fff" }}>
-            <CalendarDays size={13} /> Reservar
-          </a>
+          <div className="flex items-center gap-2">
+            <LangToggle lang={lang} setLang={setLang} />
+            <a href={`/r/${restaurant.slug}`}
+              className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-semibold transition-all hover:opacity-80"
+              style={{ background: C.gold, color: "#fff" }}>
+              <CalendarDays size={13} /> {t("reserveTable")}
+            </a>
+          </div>
         </div>
       </div>
 
@@ -59,8 +65,8 @@ export default function CardapioPublicClient({
         {categories.length === 0 ? (
           <div className="py-20 text-center rounded-2xl border" style={{ background: C.sur, borderColor: C.bdr }}>
             <UtensilsCrossed size={36} className="mx-auto mb-4 opacity-20" style={{ color: C.muted }} />
-            <p className="font-semibold" style={{ color: C.fg }}>Cardápio em breve</p>
-            <p className="text-sm mt-1" style={{ color: C.muted }}>O restaurante está montando o cardápio digital.</p>
+            <p className="font-semibold" style={{ color: C.fg }}>{t("menuComingSoon")}</p>
+            <p className="text-sm mt-1" style={{ color: C.muted }}>{t("menuComingSoonDesc")}</p>
           </div>
         ) : (
           <>
@@ -144,7 +150,7 @@ export default function CardapioPublicClient({
           <a href={`/r/${restaurant.slug}`}
             className="flex items-center gap-2 mt-3 py-3 rounded-xl text-sm font-semibold justify-center transition-all hover:opacity-90"
             style={{ background: C.gold, color: "#fff" }}>
-            <CalendarDays size={15} /> Fazer uma reserva <ChevronRight size={14} />
+            <CalendarDays size={15} /> {t("makeReservation")} <ChevronRight size={14} />
           </a>
         </div>
       </div>

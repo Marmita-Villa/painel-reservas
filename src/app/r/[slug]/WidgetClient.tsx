@@ -3,6 +3,8 @@
 import { useState, useEffect } from "react";
 import { CalendarDays, Clock, Users, ChevronLeft, ChevronRight, Check, MapPin, Phone, User, MessageSquare, Sparkles, ArrowRight, UtensilsCrossed } from "lucide-react";
 import { cn, formatName } from "@/lib/utils";
+import { useTranslation } from "@/hooks/useTranslation";
+import LangToggle from "@/components/LangToggle";
 
 interface Restaurant {
   id: string; slug: string; name: string; description: string;
@@ -14,13 +16,16 @@ interface Restaurant {
 type Step = "inicio" | "data" | "hora" | "pessoas" | "dados" | "confirmar" | "sucesso";
 
 const partySizes = [1,2,3,4,5,6,7,8];
-const dayNames   = ["Dom","Seg","Ter","Qua","Qui","Sex","Sáb"];
-const monthNames = ["Janeiro","Fevereiro","Março","Abril","Maio","Junho","Julho","Agosto","Setembro","Outubro","Novembro","Dezembro"];
-const occasions  = ["Aniversário 🎂","Namoro 💑","Negócios 💼","Formatura 🎓","Noivado 💍","Outro"];
+const dayNamesPt = ["Dom","Seg","Ter","Qua","Qui","Sex","Sáb"];
+const dayNamesEn = ["Sun","Mon","Tue","Wed","Thu","Fri","Sat"];
+const monthNamesPt = ["Janeiro","Fevereiro","Março","Abril","Maio","Junho","Julho","Agosto","Setembro","Outubro","Novembro","Dezembro"];
+const monthNamesEn = ["January","February","March","April","May","June","July","August","September","October","November","December"];
 
-function fmtDate(s: string) {
+function fmtDate(s: string, lang: "pt"|"en" = "pt") {
   const [y,m,d] = s.split("-").map(Number);
   const dt = new Date(y,m-1,d);
+  const dayNames = lang === "en" ? dayNamesEn : dayNamesPt;
+  const monthNames = lang === "en" ? monthNamesEn : monthNamesPt;
   return { day:d, dayName:dayNames[dt.getDay()], month:monthNames[m-1] };
 }
 
@@ -40,6 +45,9 @@ const C = {
 };
 
 export default function WidgetClient({ restaurant }: { restaurant: Restaurant }) {
+  const { lang, setLang, t } = useTranslation();
+  const occasions = [t("birthday"), t("romance"), t("business"), t("graduation"), t("engagement"), t("other")];
+  const dayNames  = lang === "en" ? dayNamesEn : dayNamesPt;
   const [step,         setStep]         = useState<Step>("inicio");
   const [selectedDate, setSelectedDate] = useState("");
   const [selectedTime, setSelectedTime] = useState("");
@@ -105,7 +113,9 @@ export default function WidgetClient({ restaurant }: { restaurant: Restaurant })
 
   const stepOrder: Step[] = ["inicio","data","hora","pessoas","dados","confirmar","sucesso"];
   const stepIdx = stepOrder.indexOf(step);
-  const progSteps = ["Data","Hora","Pessoas","Dados"];
+  const progSteps = lang === "en"
+    ? ["Date","Time","Guests","Details"]
+    : ["Data","Hora","Pessoas","Dados"];
 
   const handleConfirm = async () => {
     setLoading(true);
@@ -141,10 +151,13 @@ export default function WidgetClient({ restaurant }: { restaurant: Restaurant })
                 <div className="flex items-center justify-center gap-1 mt-4">
                   <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold"
                     style={{background:C.goldB,color:"#92400e"}}>
-                    <CalendarDays size={11}/> {restaurant.availableSlots.length} dias disponíveis
+                    <CalendarDays size={11}/> {restaurant.availableSlots.length} {t("daysAvailable")}
                   </span>
                 </div>
               )}
+              <div className="absolute top-3 right-3">
+                <LangToggle lang={lang} setLang={setLang} />
+              </div>
             </div>
 
             <div className="p-7 space-y-5">
@@ -165,9 +178,9 @@ export default function WidgetClient({ restaurant }: { restaurant: Restaurant })
               {/* Features */}
               <div className="grid grid-cols-3 gap-2 py-1">
                 {[
-                  {label:"Confirmação", sub:"instantânea"},
-                  {label:"Gratuito",    sub:"sem taxas"},
-                  {label:"Sem cadastro",sub:"reserva rápida"},
+                  {label:t("instantConfirmation"), sub:t("instantConfirmationSub")},
+                  {label:t("free"),                sub:t("freeSub")},
+                  {label:t("noSignup"),            sub:t("noSignupSub")},
                 ].map(f=>(
                   <div key={f.label} className="text-center py-3 px-2 rounded-xl border"
                     style={{background:C.sur2,borderColor:C.bdr2}}>
@@ -180,12 +193,12 @@ export default function WidgetClient({ restaurant }: { restaurant: Restaurant })
               <button onClick={()=>setStep("data")}
                 className="w-full py-4 rounded-xl font-semibold text-base flex items-center justify-center gap-3 transition-all hover:opacity-90 active:scale-95 shadow-sm"
                 style={{background:C.gold,color:"#fff"}}>
-                <CalendarDays size={18}/> Reservar uma mesa <ArrowRight size={16}/>
+                <CalendarDays size={18}/> {t("reserveTable")} <ArrowRight size={16}/>
               </button>
               <a href={`/r/${restaurant.slug}/cardapio`}
                 className="w-full py-3 rounded-xl text-sm font-medium flex items-center justify-center gap-2 border transition-all hover:opacity-80"
                 style={{borderColor:C.bdr,color:C.muted,background:C.sur2}}>
-                <UtensilsCrossed size={15}/> Ver cardápio
+                <UtensilsCrossed size={15}/> {t("viewMenu")}
               </a>
             </div>
           </div>
@@ -222,8 +235,8 @@ export default function WidgetClient({ restaurant }: { restaurant: Restaurant })
               {step==="data" && (
                 <div className="space-y-5">
                   <div>
-                    <h2 className="text-xl font-bold tracking-tight" style={{color:C.fg}}>Qual data?</h2>
-                    <p className="text-sm mt-1" style={{color:C.muted}}>Selecione o dia da sua visita</p>
+                    <h2 className="text-xl font-bold tracking-tight" style={{color:C.fg}}>{t("whichDate")}</h2>
+                    <p className="text-sm mt-1" style={{color:C.muted}}>{t("selectDay")}</p>
                   </div>
 
                   {/* Month navigation */}
@@ -236,7 +249,7 @@ export default function WidgetClient({ restaurant }: { restaurant: Restaurant })
                       <ChevronLeft size={16}/>
                     </button>
                     <span className="text-sm font-semibold" style={{color:C.fg}}>
-                      {monthNames[calMonth.getMonth()]} {calMonth.getFullYear()}
+                      {(lang==="en"?monthNamesEn:monthNamesPt)[calMonth.getMonth()]} {calMonth.getFullYear()}
                     </span>
                     <button
                       onClick={()=>setCalMonth(m=>new Date(m.getFullYear(),m.getMonth()+1,1))}
@@ -293,11 +306,11 @@ export default function WidgetClient({ restaurant }: { restaurant: Restaurant })
                   <div className="flex items-center gap-4 pt-1">
                     <div className="flex items-center gap-1.5">
                       <div className="w-2 h-2 rounded-full" style={{background:"#16a34a"}}/>
-                      <span className="text-xs" style={{color:C.muted}}>Disponível</span>
+                      <span className="text-xs" style={{color:C.muted}}>{t("available")}</span>
                     </div>
                     <div className="flex items-center gap-1.5">
                       <div className="w-2 h-2 rounded-full" style={{background:C.gold}}/>
-                      <span className="text-xs" style={{color:C.muted}}>Poucos horários</span>
+                      <span className="text-xs" style={{color:C.muted}}>{t("fewSlots")}</span>
                     </div>
                   </div>
                 </div>
@@ -307,14 +320,14 @@ export default function WidgetClient({ restaurant }: { restaurant: Restaurant })
               {step==="hora" && (
                 <div className="space-y-6">
                   <div>
-                    <h2 className="text-xl font-bold tracking-tight" style={{color:C.fg}}>Que horas?</h2>
+                    <h2 className="text-xl font-bold tracking-tight" style={{color:C.fg}}>{t("whatTime")}</h2>
                     <p className="text-sm mt-1" style={{color:C.muted}}>
-                      {fmtDate(selectedDate).dayName}, {fmtDate(selectedDate).day} de {fmtDate(selectedDate).month}
+                      {fmtDate(selectedDate,lang).dayName}, {fmtDate(selectedDate,lang).day} {lang==="en"?"of":""} {fmtDate(selectedDate,lang).month}
                     </p>
                   </div>
                   {lunchTimes.length>0&&(
                     <div>
-                      <p className="text-xs font-bold uppercase tracking-widest mb-3" style={{color:C.dim}}>Almoço</p>
+                      <p className="text-xs font-bold uppercase tracking-widest mb-3" style={{color:C.dim}}>{t("lunch")}</p>
                       <div className="grid grid-cols-4 gap-2">
                         {lunchTimes.map(t=>(
                           <button key={t} onClick={()=>{setSelectedTime(t);setStep("pessoas");}}
@@ -328,7 +341,7 @@ export default function WidgetClient({ restaurant }: { restaurant: Restaurant })
                   )}
                   {dinnerTimes.length>0&&(
                     <div>
-                      <p className="text-xs font-bold uppercase tracking-widest mb-3" style={{color:C.dim}}>Jantar</p>
+                      <p className="text-xs font-bold uppercase tracking-widest mb-3" style={{color:C.dim}}>{t("dinner")}</p>
                       <div className="grid grid-cols-4 gap-2">
                         {dinnerTimes.map(t=>(
                           <button key={t} onClick={()=>{setSelectedTime(t);setStep("pessoas");}}
@@ -347,9 +360,9 @@ export default function WidgetClient({ restaurant }: { restaurant: Restaurant })
               {step==="pessoas" && (
                 <div className="space-y-6">
                   <div>
-                    <h2 className="text-xl font-bold tracking-tight" style={{color:C.fg}}>Quantas pessoas?</h2>
+                    <h2 className="text-xl font-bold tracking-tight" style={{color:C.fg}}>{t("howManyPeople")}</h2>
                     <p className="text-sm mt-1" style={{color:C.muted}}>
-                      {fmtDate(selectedDate).dayName}, {fmtDate(selectedDate).day} de {fmtDate(selectedDate).month} às {selectedTime}
+                      {fmtDate(selectedDate,lang).dayName}, {fmtDate(selectedDate,lang).day} {lang==="en"?"of":""} {fmtDate(selectedDate,lang).month} {lang==="en"?"at":"às"} {selectedTime}
                     </p>
                   </div>
                   <div className="grid grid-cols-4 gap-3">
@@ -362,11 +375,11 @@ export default function WidgetClient({ restaurant }: { restaurant: Restaurant })
                       </button>
                     ))}
                   </div>
-                  <p className="text-xs text-center" style={{color:C.dim}}>Grupos maiores: {restaurant.phone}</p>
+                  <p className="text-xs text-center" style={{color:C.dim}}>{t("largeGroups")} {restaurant.phone}</p>
                   <button onClick={()=>setStep("dados")}
                     className="w-full py-4 rounded-xl font-semibold flex items-center justify-center gap-2 shadow-sm transition-all hover:opacity-90"
                     style={{background:C.gold,color:"#fff"}}>
-                    Continuar com {partySize} {partySize===1?"pessoa":"pessoas"} <ArrowRight size={16}/>
+                    {t("continueWith")} {partySize} {partySize===1?t("person"):t("people")} <ArrowRight size={16}/>
                   </button>
                 </div>
               )}
@@ -375,19 +388,19 @@ export default function WidgetClient({ restaurant }: { restaurant: Restaurant })
               {step==="dados" && (
                 <div className="space-y-5">
                   <div>
-                    <h2 className="text-xl font-bold tracking-tight" style={{color:C.fg}}>Seus dados</h2>
-                    <p className="text-sm mt-1" style={{color:C.muted}}>Para confirmar sua reserva</p>
+                    <h2 className="text-xl font-bold tracking-tight" style={{color:C.fg}}>{t("yourDetails")}</h2>
+                    <p className="text-sm mt-1" style={{color:C.muted}}>{t("toConfirmReservation")}</p>
                   </div>
                   <div className="flex items-center gap-3 px-4 py-3 rounded-xl text-sm border"
                     style={{background:C.goldL,borderColor:C.goldB}}>
-                    <CalendarDays size={14} style={{color:C.gold}}/><span style={{color:C.fg}}>{fmtDate(selectedDate).dayName}, {fmtDate(selectedDate).day} de {fmtDate(selectedDate).month}</span>
+                    <CalendarDays size={14} style={{color:C.gold}}/><span style={{color:C.fg}}>{fmtDate(selectedDate,lang).dayName}, {fmtDate(selectedDate,lang).day} {lang==="en"?"of":""} {fmtDate(selectedDate,lang).month}</span>
                     <span style={{color:C.dim}}>·</span><Clock size={14} style={{color:C.gold}}/><span style={{color:C.fg}}>{selectedTime}</span>
                     <span style={{color:C.dim}}>·</span><Users size={14} style={{color:C.gold}}/><span style={{color:C.fg}}>{partySize}p</span>
                   </div>
                   <div className="space-y-4">
                     {[
-                      {label:"Nome completo *",placeholder:"Seu nome",value:name,onChange:(v:string)=>setName(formatName(v)),icon:User,type:"text"},
-                      {label:"WhatsApp / Telefone *",placeholder:"(11) 99999-9999",value:phone,onChange:(v:string)=>setPhone(v),icon:Phone,type:"tel"},
+                      {label:t("fullName"),placeholder:lang==="en"?"Your name":"Seu nome",value:name,onChange:(v:string)=>setName(formatName(v)),icon:User,type:"text"},
+                      {label:t("whatsappPhone"),placeholder:"(11) 99999-9999",value:phone,onChange:(v:string)=>setPhone(v),icon:Phone,type:"tel"},
                     ].map(f=>(
                       <div key={f.label}>
                         <label className="block text-xs font-semibold mb-2 uppercase tracking-wide" style={{color:C.muted}}>{f.label}</label>
@@ -401,7 +414,7 @@ export default function WidgetClient({ restaurant }: { restaurant: Restaurant })
                     ))}
                     <div>
                       <label className="block text-xs font-semibold mb-2 uppercase tracking-wide" style={{color:C.muted}}>
-                        Ocasião especial <span className="normal-case font-normal">(opcional)</span>
+                        {t("specialOccasion")} <span className="normal-case font-normal">({t("optional")})</span>
                       </label>
                       <div className="grid grid-cols-3 gap-2">
                         {occasions.map(oc=>(
@@ -415,11 +428,11 @@ export default function WidgetClient({ restaurant }: { restaurant: Restaurant })
                     </div>
                     <div>
                       <label className="block text-xs font-semibold mb-2 uppercase tracking-wide" style={{color:C.muted}}>
-                        Observações <span className="normal-case font-normal">(opcional)</span>
+                        {t("notes")} <span className="normal-case font-normal">({t("optional")})</span>
                       </label>
                       <div className="relative">
                         <MessageSquare size={15} className="absolute left-4 top-4" style={{color:C.dim}}/>
-                        <textarea rows={2} placeholder="Alergias, preferências, cadeirinha..."
+                        <textarea rows={2} placeholder={t("notesPlaceholder")}
                           value={notes} onChange={e=>setNotes(e.target.value)}
                           className="w-full pl-11 pr-4 py-3.5 text-sm resize-none" style={{fontSize:"15px"}}/>
                       </div>
@@ -428,7 +441,7 @@ export default function WidgetClient({ restaurant }: { restaurant: Restaurant })
                   <button onClick={()=>setStep("confirmar")} disabled={!name||!phone}
                     className="w-full py-4 rounded-xl font-semibold flex items-center justify-center gap-2 disabled:opacity-40 shadow-sm transition-all hover:opacity-90"
                     style={{background:C.gold,color:"#fff"}}>
-                    Revisar reserva <ArrowRight size={16}/>
+                    {t("reviewReservation")} <ArrowRight size={16}/>
                   </button>
                 </div>
               )}
@@ -437,8 +450,8 @@ export default function WidgetClient({ restaurant }: { restaurant: Restaurant })
               {step==="confirmar" && (
                 <div className="space-y-5">
                   <div>
-                    <h2 className="text-xl font-bold tracking-tight" style={{color:C.fg}}>Confirmar reserva</h2>
-                    <p className="text-sm mt-1" style={{color:C.muted}}>Revise os dados antes de confirmar</p>
+                    <h2 className="text-xl font-bold tracking-tight" style={{color:C.fg}}>{t("confirmReservation")}</h2>
+                    <p className="text-sm mt-1" style={{color:C.muted}}>{t("reviewData")}</p>
                   </div>
                   <div className="flex items-center gap-4 p-5 rounded-xl border" style={{background:C.goldL,borderColor:C.goldB}}>
                     <div className="w-12 h-12 rounded-xl flex items-center justify-center text-xl font-bold flex-shrink-0"
@@ -450,13 +463,13 @@ export default function WidgetClient({ restaurant }: { restaurant: Restaurant })
                   </div>
                   <div className="rounded-xl border overflow-hidden divide-y" style={{borderColor:C.bdr}}>
                     {[
-                      {icon:CalendarDays,label:"Data",value:`${fmtDate(selectedDate).dayName}, ${fmtDate(selectedDate).day} de ${fmtDate(selectedDate).month}`},
-                      {icon:Clock,label:"Horário",value:selectedTime},
-                      {icon:Users,label:"Pessoas",value:`${partySize} pessoa${partySize>1?"s":""}`},
-                      {icon:User,label:"Nome",value:name},
-                      {icon:Phone,label:"Telefone",value:phone},
-                      ...(occasion?[{icon:Sparkles,label:"Ocasião",value:occasion}]:[]),
-                      ...(notes?[{icon:MessageSquare,label:"Obs.",value:notes}]:[]),
+                      {icon:CalendarDays,label:t("date"),value:`${fmtDate(selectedDate,lang).dayName}, ${fmtDate(selectedDate,lang).day} ${lang==="en"?"of":""} ${fmtDate(selectedDate,lang).month}`},
+                      {icon:Clock,label:t("time"),value:selectedTime},
+                      {icon:Users,label:t("persons"),value:`${partySize} ${partySize>1?t("people"):t("person")}`},
+                      {icon:User,label:t("name"),value:name},
+                      {icon:Phone,label:t("phone"),value:phone},
+                      ...(occasion?[{icon:Sparkles,label:t("occasion"),value:occasion}]:[]),
+                      ...(notes?[{icon:MessageSquare,label:t("obs"),value:notes}]:[]),
                     ].map(({icon:Icon,label,value})=>(
                       <div key={label} className="flex items-center gap-4 px-5 py-3.5" style={{borderColor:C.bdr2}}>
                         <Icon size={15} style={{color:C.gold,flexShrink:0}}/>
@@ -465,12 +478,12 @@ export default function WidgetClient({ restaurant }: { restaurant: Restaurant })
                       </div>
                     ))}
                   </div>
-                  <p className="text-xs text-center" style={{color:C.dim}}>Você receberá uma confirmação no WhatsApp.</p>
+                  <p className="text-xs text-center" style={{color:C.dim}}>{t("whatsappConfirmation")}</p>
                   <button onClick={handleConfirm} disabled={loading}
                     className="w-full py-4 rounded-xl font-semibold flex items-center justify-center gap-2 shadow-sm transition-all hover:opacity-90 disabled:opacity-60"
                     style={{background:"#16a34a",color:"#fff"}}>
                     {loading?<span className="animate-spin w-5 h-5 border-2 border-white border-t-transparent rounded-full"/>
-                            :<><Check size={18}/> Confirmar Reserva</>}
+                            :<><Check size={18}/> {t("confirmReservation")}</>}
                   </button>
                 </div>
               )}
@@ -487,15 +500,15 @@ export default function WidgetClient({ restaurant }: { restaurant: Restaurant })
                 <Check size={36} style={{color:"#16a34a"}}/>
               </div>
               <div>
-                <h2 className="text-2xl font-bold mb-2" style={{color:C.fg}}>Reserva confirmada!</h2>
-                <p className="text-base" style={{color:C.muted}}>Te esperamos, {name.split(" ")[0]}!</p>
+                <h2 className="text-2xl font-bold mb-2" style={{color:C.fg}}>{t("reservationConfirmed")}</h2>
+                <p className="text-base" style={{color:C.muted}}>{t("seeYouSoon")} {name.split(" ")[0]}!</p>
               </div>
               <div className="rounded-xl border overflow-hidden divide-y text-left" style={{borderColor:C.bdr}}>
                 {[
-                  {icon:CalendarDays,label:"Data",value:`${fmtDate(selectedDate).dayName}, ${fmtDate(selectedDate).day} de ${fmtDate(selectedDate).month}`},
-                  {icon:Clock,label:"Horário",value:selectedTime},
-                  {icon:Users,label:"Pessoas",value:`${partySize} pessoa${partySize>1?"s":""}`},
-                  {icon:MapPin,label:"Local",value:restaurant.address},
+                  {icon:CalendarDays,label:t("date"),value:`${fmtDate(selectedDate,lang).dayName}, ${fmtDate(selectedDate,lang).day} ${lang==="en"?"of":""} ${fmtDate(selectedDate,lang).month}`},
+                  {icon:Clock,label:t("time"),value:selectedTime},
+                  {icon:Users,label:t("persons"),value:`${partySize} ${partySize>1?t("people"):t("person")}`},
+                  {icon:MapPin,label:t("local"),value:restaurant.address},
                 ].map(({icon:Icon,label,value})=>(
                   <div key={label} className="flex items-center gap-4 px-5 py-4" style={{borderColor:C.bdr2}}>
                     <Icon size={15} style={{color:"#16a34a",flexShrink:0}}/>
@@ -505,12 +518,12 @@ export default function WidgetClient({ restaurant }: { restaurant: Restaurant })
                 ))}
               </div>
               <p className="text-sm" style={{color:C.dim}}>
-                Confirmação enviada para <strong style={{color:C.muted}}>{phone}</strong>
+                {t("confirmationSentTo")} <strong style={{color:C.muted}}>{phone}</strong>
               </p>
               <button onClick={()=>{setStep("inicio");setSelectedDate("");setSelectedTime("");setPartySize(2);setName("");setPhone("");setNotes("");setOccasion("");}}
                 className="text-sm underline underline-offset-4 transition-opacity hover:opacity-60"
                 style={{color:C.dim}}>
-                Fazer outra reserva
+                {t("anotherReservation")}
               </button>
             </div>
           </div>
