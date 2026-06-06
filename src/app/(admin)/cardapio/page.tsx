@@ -10,7 +10,7 @@ const TAGS = ["Vegetariano 🥦", "Vegano 🌱", "Sem glúten 🌾", "Sem lactos
 interface MenuItem {
   id: string; name: string; description?: string | null;
   price?: number | null; imageUrl?: string | null;
-  tags: string[]; isActive: boolean; position: number;
+  tags: string[]; isActive: boolean; isSoldOut: boolean; position: number;
 }
 interface MenuCategory {
   id: string; name: string; description?: string | null;
@@ -28,6 +28,7 @@ function ItemForm({ categoryId, item, onSave, onCancel }: {
   const [name, setName] = useState(item?.name ?? "");
   const [desc, setDesc] = useState(item?.description ?? "");
   const [price, setPrice] = useState(item?.price != null ? String(item.price) : "");
+  const [imageUrl, setImageUrl] = useState(item?.imageUrl ?? "");
   const [tags, setTags] = useState<string[]>(item?.tags ?? []);
   const [saving, setSaving] = useState(false);
 
@@ -39,7 +40,7 @@ function ItemForm({ categoryId, item, onSave, onCancel }: {
     e.preventDefault();
     if (!name.trim()) return;
     setSaving(true);
-    await onSave({ name: name.trim(), description: desc || null, price: price ? Number(price) : null, tags });
+    await onSave({ name: name.trim(), description: desc || null, price: price ? Number(price) : null, imageUrl: imageUrl || null, tags });
     setSaving(false);
   }
 
@@ -73,6 +74,24 @@ function ItemForm({ categoryId, item, onSave, onCancel }: {
             placeholder="0,00"
             className="w-full px-3 py-2.5 rounded-xl text-sm outline-none"
             style={{ background: "var(--surface)", border: "1px solid var(--border)", color: "var(--foreground)" }} />
+        </div>
+        <div className="col-span-2">
+          <label className="block text-xs font-semibold mb-1.5 uppercase tracking-wide" style={{ color: "var(--foreground-muted)" }}>
+            Foto do prato (URL)
+          </label>
+          <div className="flex gap-2">
+            <input type="url" value={imageUrl} onChange={e => setImageUrl(e.target.value)}
+              placeholder="https://... (link de uma imagem)"
+              className="flex-1 px-3 py-2.5 rounded-xl text-sm outline-none"
+              style={{ background: "var(--surface)", border: "1px solid var(--border)", color: "var(--foreground)" }} />
+            {imageUrl && (
+              <img src={imageUrl} alt="preview" className="w-12 h-12 rounded-lg object-cover flex-shrink-0"
+                onError={e => (e.currentTarget.style.display = "none")} />
+            )}
+          </div>
+          <p className="text-xs mt-1" style={{ color: "var(--foreground-muted)" }}>
+            Cole o link de uma foto do prato (Google Drive público, Imgur, etc.)
+          </p>
         </div>
       </div>
 
@@ -180,11 +199,11 @@ function CategoryBlock({ category, onUpdate, onDelete }: {
     if (res.ok) onUpdate({ ...category, items: category.items.filter(i => i.id !== itemId) });
   }
 
-  async function toggleItemActive(item: MenuItem) {
+  async function toggleItemField(item: MenuItem, field: "isActive" | "isSoldOut") {
     const res = await fetch(`/api/menu/items/${item.id}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ isActive: !item.isActive }),
+      body: JSON.stringify({ [field]: !item[field] }),
     });
     if (res.ok) {
       const updated = await res.json();
@@ -241,10 +260,11 @@ function CategoryBlock({ category, onUpdate, onDelete }: {
                   onCancel={() => setEditingItem(null)} />
               ) : (
                 <div className="flex items-start gap-3 p-4 rounded-xl border transition-all"
-                  style={{ background: "var(--surface-2)", borderColor: "var(--border)", opacity: item.isActive ? 1 : 0.5 }}>
+                  style={{ background: "var(--surface-2)", borderColor: item.isSoldOut ? "var(--warning)" : "var(--border)", opacity: item.isActive ? 1 : 0.5 }}>
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 flex-wrap">
-                      <p className="text-sm font-semibold" style={{ color: "var(--foreground)" }}>{item.name}</p>
+                      <p className="text-sm font-semibold" style={{ color: "var(--foreground)", textDecoration: item.isSoldOut ? "line-through" : "none" }}>{item.name}</p>
+                      {item.isSoldOut && <span className="text-xs px-1.5 py-0.5 rounded-full font-bold" style={{ background: "var(--warning)20", color: "var(--warning)" }}>86 · Esgotado</span>}
                       {item.tags.map(t => (
                         <span key={t} className="text-xs px-1.5 py-0.5 rounded-full"
                           style={{ background: "var(--primary)10", color: "var(--primary)" }}>{t}</span>
@@ -258,13 +278,23 @@ function CategoryBlock({ category, onUpdate, onDelete }: {
                     )}
                   </div>
                   <div className="flex items-center gap-1 flex-shrink-0">
-                    <button onClick={() => toggleItemActive(item)} className="text-xs px-2 py-1 rounded-full border transition-all"
+                    <button onClick={() => toggleItemField(item, "isSoldOut")}
+                      title={item.isSoldOut ? "Disponível" : "Marcar como esgotado"}
+                      className="text-xs px-2 py-1 rounded-full border transition-all font-semibold"
+                      style={{
+                        background: item.isSoldOut ? "var(--warning)20" : "transparent",
+                        borderColor: item.isSoldOut ? "var(--warning)" : "var(--border)",
+                        color: item.isSoldOut ? "var(--warning)" : "var(--foreground-muted)",
+                      }}>
+                      {item.isSoldOut ? "Esgotado" : "86"}
+                    </button>
+                    <button onClick={() => toggleItemField(item, "isActive")} className="text-xs px-2 py-1 rounded-full border transition-all"
                       style={{
                         background: item.isActive ? "transparent" : "var(--surface-3, var(--surface))",
                         borderColor: "var(--border)",
                         color: "var(--foreground-muted)",
                       }}>
-                      {item.isActive ? "Ativo" : "Oculto"}
+                      {item.isActive ? "Visível" : "Oculto"}
                     </button>
                     <button onClick={() => setEditingItem(item)}
                       className="w-8 h-8 rounded-lg flex items-center justify-center hover:opacity-70 transition-opacity"

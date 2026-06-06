@@ -27,6 +27,7 @@ model Restaurant {
   email        String?
   address      String?
   logoUrl      String?
+  primaryColor String   @default("#f07316")
   timezone     String   @default("America/Sao_Paulo")
   isActive     Boolean  @default(true)
   plan         String   @default("FREE")
@@ -253,6 +254,7 @@ model MenuItem {
   imageUrl    String?
   tags        String[]
   isActive    Boolean      @default(true)
+  isSoldOut   Boolean      @default(false)
   position    Int          @default(0)
   createdAt   DateTime     @default(now())
 }
