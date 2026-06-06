@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { CalendarDays, Clock, Users, ChevronLeft, ChevronRight, Check, MapPin, Phone, User, MessageSquare, Sparkles, ArrowRight } from "lucide-react";
 import { cn, formatName } from "@/lib/utils";
 
@@ -49,11 +49,16 @@ export default function WidgetClient({ restaurant }: { restaurant: Restaurant })
   const [notes,        setNotes]        = useState("");
   const [occasion,     setOccasion]     = useState("");
   const [loading,      setLoading]      = useState(false);
-  const [calMonth,     setCalMonth]     = useState(() => { const d = new Date(); return new Date(d.getFullYear(), d.getMonth(), 1); });
+  // Use fixed initial date to avoid SSR/client mismatch — updated after mount
+  const [calMonth,     setCalMonth]     = useState(() => new Date(new Date().getFullYear(), new Date().getMonth(), 1));
+  const [now,          setNow]          = useState<Date | null>(null);
 
-  const today = new Date();
-  const todayStr = today.toISOString().split("T")[0];
-  const nowMinutes = today.getHours() * 60 + today.getMinutes() + 60; // 60min buffer
+  // Only run date logic on client to avoid hydration mismatch
+  useEffect(() => { setNow(new Date()); }, []);
+
+  const today      = now ?? new Date(0); // epoch as safe SSR default
+  const todayStr   = now ? now.toISOString().split("T")[0] : "9999-12-31"; // future date = no filtering on SSR
+  const nowMinutes = now ? now.getHours() * 60 + now.getMinutes() + 60 : 0;
 
   // Build availMap filtering out past times for today
   const availMap = new Map(
