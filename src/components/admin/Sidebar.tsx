@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import Logo from "@/components/Logo";
-import { LayoutDashboard, CalendarDays, Users, Clock, Map, BarChart3, Settings, PanelLeftClose, PanelLeftOpen, UserCog, Store, CreditCard, Zap } from "lucide-react";
+import { LayoutDashboard, CalendarDays, Users, Clock, Map, BarChart3, Settings, PanelLeftClose, PanelLeftOpen, UserCog, Store, CreditCard, Zap, UtensilsCrossed } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useState } from "react";
 import { useSession } from "next-auth/react";
@@ -16,6 +16,7 @@ const allNavItems = [
   { href: "/mesas",         label: "Mesas",          icon: Map,             roles: ["MASTER_SUPER", "ADMIN", "GERENTE"] },
   { href: "/clientes",      label: "Clientes",       icon: Users,           roles: ["MASTER_SUPER", "ADMIN", "GERENTE"] },
   { href: "/relatorios",    label: "Relatórios",     icon: BarChart3,       roles: ["MASTER_SUPER", "ADMIN", "GERENTE"] },
+  { href: "/cardapio",      label: "Cardápio",        icon: UtensilsCrossed, roles: ["MASTER_SUPER", "ADMIN", "GERENTE"] },
   { href: "/configuracoes", label: "Configurações",  icon: Settings,        roles: ["MASTER_SUPER", "ADMIN"] },
   { href: "/usuarios",      label: "Usuários",       icon: UserCog,         roles: ["MASTER_SUPER", "ADMIN"] },
   { href: "/restaurantes",  label: "Restaurantes",   icon: Store,           roles: ["MASTER_SUPER"] },

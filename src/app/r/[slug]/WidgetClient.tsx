@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { CalendarDays, Clock, Users, ChevronLeft, ChevronRight, Check, MapPin, Phone, User, MessageSquare, Sparkles, ArrowRight } from "lucide-react";
+import { CalendarDays, Clock, Users, ChevronLeft, ChevronRight, Check, MapPin, Phone, User, MessageSquare, Sparkles, ArrowRight, UtensilsCrossed } from "lucide-react";
 import { cn, formatName } from "@/lib/utils";
 
 interface Restaurant {
@@ -182,6 +182,11 @@ export default function WidgetClient({ restaurant }: { restaurant: Restaurant })
                 style={{background:C.gold,color:"#fff"}}>
                 <CalendarDays size={18}/> Reservar uma mesa <ArrowRight size={16}/>
               </button>
+              <a href={`/r/${restaurant.slug}/cardapio`}
+                className="w-full py-3 rounded-xl text-sm font-medium flex items-center justify-center gap-2 border transition-all hover:opacity-80"
+                style={{borderColor:C.bdr,color:C.muted,background:C.sur2}}>
+                <UtensilsCrossed size={15}/> Ver cardápio
+              </a>
             </div>
           </div>
         )}

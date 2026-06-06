@@ -43,6 +43,7 @@ model Restaurant {
   waitlistEntries   WaitlistEntry[]
   settings          RestaurantSettings?
   notificationLogs  NotificationLog[]
+  menuCategories    MenuCategory[]
 }
 
 model RestaurantSettings {
@@ -228,4 +229,30 @@ model NotificationLog {
   message        String
   success        Boolean
   sentAt         DateTime    @default(now())
+}
+
+model MenuCategory {
+  id           String     @id @default(cuid())
+  restaurantId String
+  restaurant   Restaurant @relation(fields: [restaurantId], references: [id])
+  name         String
+  description  String?
+  position     Int        @default(0)
+  isActive     Boolean    @default(true)
+  createdAt    DateTime   @default(now())
+  items        MenuItem[]
+}
+
+model MenuItem {
+  id          String       @id @default(cuid())
+  categoryId  String
+  category    MenuCategory @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  name        String
+  description String?
+  price       Float?
+  imageUrl    String?
+  tags        String[]
+  isActive    Boolean      @default(true)
+  position    Int          @default(0)
+  createdAt   DateTime     @default(now())
 }
