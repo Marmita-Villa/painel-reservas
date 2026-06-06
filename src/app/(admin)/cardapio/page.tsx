@@ -309,7 +309,7 @@ function CardapioContent() {
   const [saving, setSaving] = useState(false);
 
   const fetchMenu = useCallback(async () => {
-    if (!effectiveRestaurantId) return;
+    if (!effectiveRestaurantId) { setLoading(false); return; }
     setLoading(true);
     try {
       const res = await fetch(`/api/menu?restaurantId=${effectiveRestaurantId}`);
@@ -328,7 +328,7 @@ function CardapioContent() {
       const res = await fetch("/api/menu", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name: newCatName.trim() }),
+        body: JSON.stringify({ name: newCatName.trim(), restaurantId: effectiveRestaurantId }),
       });
       if (res.ok) {
         const cat = await res.json();
@@ -388,7 +388,15 @@ function CardapioContent() {
         </div>
       )}
 
-      {loading ? (
+      {!effectiveRestaurantId ? (
+        <div className="p-10 text-center rounded-2xl border border-dashed" style={{ borderColor: "var(--border)" }}>
+          <UtensilsCrossed size={32} className="mx-auto mb-3 opacity-20" style={{ color: "var(--foreground-muted)" }} />
+          <p className="font-semibold" style={{ color: "var(--foreground)" }}>Selecione um restaurante</p>
+          <p className="text-sm mt-1" style={{ color: "var(--foreground-muted)" }}>
+            Use o seletor no header para escolher o restaurante antes de editar o cardápio.
+          </p>
+        </div>
+      ) : loading ? (
         <div className="p-10 text-center" style={{ color: "var(--foreground-muted)" }}>
           <Loader2 size={28} className="animate-spin mx-auto mb-3" />
           <p className="text-sm">Carregando cardápio...</p>

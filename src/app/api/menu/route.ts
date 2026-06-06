@@ -40,11 +40,13 @@ export async function POST(req: NextRequest) {
   if (!session?.user) return NextResponse.json({ error: "Não autenticado" }, { status: 401 });
 
   const user = session.user as any;
-  const restaurantId = user.restaurantId;
+  const body = await req.json();
+  const { name, description, restaurantId: bodyRestaurantId } = body;
+
+  // MASTER_SUPER passes restaurantId in the body; other roles use their own
+  const restaurantId = bodyRestaurantId ?? user.restaurantId;
   if (!restaurantId) return NextResponse.json({ error: "Sem restaurante" }, { status: 400 });
 
-  const body = await req.json();
-  const { name, description } = body;
   if (!name) return NextResponse.json({ error: "Nome obrigatório" }, { status: 400 });
 
   // Get next position
