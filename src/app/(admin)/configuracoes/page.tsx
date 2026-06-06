@@ -810,11 +810,11 @@ export default function ConfiguracoesPage() {
                 </div>
               )}
 
-              {/* Embed code */}
+              {/* Embed code — reservas */}
               {widgetUrl && (
                 <div>
                   <label className="block text-sm font-medium mb-2" style={{ color: "var(--foreground-muted)" }}>
-                    Código de Incorporação (iFrame)
+                    Incorporar Widget de Reservas (iFrame)
                   </label>
                   <p className="text-xs mb-2" style={{ color: "var(--foreground-muted)" }}>
                     Cole este código no seu site para exibir o widget de reservas diretamente.
@@ -827,6 +827,105 @@ export default function ConfiguracoesPage() {
                     style={{ background: "var(--surface-2)", border: "1px solid var(--border)", color: "var(--foreground)" }}
                   />
                 </div>
+              )}
+
+              {/* ── CARDÁPIO DIGITAL ── */}
+              {slug && (
+                <>
+                  <div className="border-t pt-6" style={{ borderColor: "var(--border)" }}>
+                    <h3 className="font-semibold mb-1" style={{ color: "var(--foreground)" }}>Cardápio Digital</h3>
+                    <p className="text-xs mb-4" style={{ color: "var(--foreground-muted)" }}>
+                      Página standalone do cardápio — compartilhe nas redes sociais, Google Meu Negócio ou incorpore no seu site.
+                    </p>
+
+                    {/* Menu URL */}
+                    <div className="mb-4">
+                      <label className="block text-sm font-medium mb-2" style={{ color: "var(--foreground-muted)" }}>
+                        Link do Cardápio
+                      </label>
+                      <div className="flex items-center gap-2">
+                        <input
+                          type="text"
+                          readOnly
+                          value={`${BASE_URL}/menu/${slug}`}
+                          className="flex-1 px-3 py-2.5 rounded-lg text-sm outline-none font-mono"
+                          style={{ background: "var(--surface-2)", border: "1px solid var(--border)", color: "var(--foreground)" }}
+                        />
+                        <button
+                          onClick={() => { navigator.clipboard.writeText(`${BASE_URL}/menu/${slug}`); setCopied(true); setTimeout(() => setCopied(false), 2000); }}
+                          className="flex items-center gap-1.5 px-4 py-2.5 rounded-lg text-sm font-medium transition-opacity hover:opacity-80"
+                          style={{ background: "var(--surface-2)", color: "var(--foreground-muted)", border: "1px solid var(--border)" }}
+                        >
+                          <Copy size={13} /> Copiar
+                        </button>
+                        <a
+                          href={`/menu/${slug}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="flex items-center gap-1.5 px-4 py-2.5 rounded-lg text-sm font-medium text-white transition-opacity hover:opacity-80"
+                          style={{ background: "var(--primary)" }}
+                        >
+                          Abrir
+                        </a>
+                      </div>
+                    </div>
+
+                    {/* QR Code do menu */}
+                    <div className="mb-4">
+                      <label className="block text-sm font-medium mb-3" style={{ color: "var(--foreground-muted)" }}>
+                        QR Code do Cardápio
+                      </label>
+                      <div className="flex items-start gap-6">
+                        <div className="p-3 rounded-xl border flex-shrink-0"
+                          style={{ background: "white", borderColor: "var(--border)" }}>
+                          {/* eslint-disable-next-line @next/next/no-img-element */}
+                          <img
+                            src={`https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(`${BASE_URL}/menu/${slug}`)}`}
+                            alt="QR Code do Cardápio"
+                            width={160}
+                            height={160}
+                            style={{ display: "block" }}
+                          />
+                        </div>
+                        <div className="space-y-2 pt-2">
+                          <p className="text-sm" style={{ color: "var(--foreground-muted)" }}>
+                            Imprima e coloque na mesa ou na entrada — o cliente aponta a câmera e vê o cardápio completo.
+                          </p>
+                          <button
+                            onClick={() => {
+                              const a = document.createElement("a");
+                              a.href = `https://api.qrserver.com/v1/create-qr-code/?size=400x400&data=${encodeURIComponent(`${BASE_URL}/menu/${slug}`)}`;
+                              a.download = `qr-cardapio-${slug}.png`;
+                              a.target = "_blank";
+                              a.click();
+                            }}
+                            className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-opacity hover:opacity-80"
+                            style={{ background: "var(--surface-2)", color: "var(--foreground)", border: "1px solid var(--border)" }}
+                          >
+                            Baixar QR Code
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Embed cardápio */}
+                    <div>
+                      <label className="block text-sm font-medium mb-2" style={{ color: "var(--foreground-muted)" }}>
+                        Incorporar Cardápio no Site (iFrame)
+                      </label>
+                      <p className="text-xs mb-2" style={{ color: "var(--foreground-muted)" }}>
+                        Cole no seu site para exibir o cardápio completo diretamente na página.
+                      </p>
+                      <textarea
+                        readOnly
+                        value={`<iframe src="${BASE_URL}/menu/${slug}" width="100%" height="800" frameborder="0" style="border-radius:16px;border:none;"></iframe>`}
+                        rows={3}
+                        className="w-full px-3 py-2.5 rounded-lg text-xs outline-none font-mono resize-none"
+                        style={{ background: "var(--surface-2)", border: "1px solid var(--border)", color: "var(--foreground)" }}
+                      />
+                    </div>
+                  </div>
+                </>
               )}
             </div>
           )}
