@@ -1,8 +1,15 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Store, Plus, X } from "lucide-react";
+import { Store, Plus, X, Check } from "lucide-react";
 import { useSession } from "next-auth/react";
+import { PLANS, getPlanLimits } from "@/lib/plans";
+
+const PLAN_STYLE: Record<string, { bg: string; color: string; label: string }> = {
+  FREE:    { bg: "#6b728020", color: "#6b7280", label: "Free" },
+  PRO:     { bg: "#2563eb20", color: "#2563eb", label: "Pro" },
+  PREMIUM: { bg: "#f0731620", color: "#f07316", label: "Premium" },
+};
 
 function slugify(str: string) {
   return str
@@ -22,6 +29,8 @@ export default function RestaurantesPage() {
   const [showForm, setShowForm] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
+  const [savingPlan, setSavingPlan] = useState<string | null>(null);
+  const [planSuccess, setPlanSuccess] = useState<string | null>(null);
 
   const [form, setForm] = useState({
     name: "", slug: "", phone: "", email: "", address: "",
@@ -43,6 +52,23 @@ export default function RestaurantesPage() {
     } finally {
       setLoading(false);
     }
+  }
+
+  async function handlePlanChange(restaurantId: string, plan: string) {
+    setSavingPlan(restaurantId);
+    try {
+      const res = await fetch(`/api/restaurants/${restaurantId}/plan`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ plan }),
+      });
+      if (res.ok) {
+        setRestaurants(prev => prev.map(r => r.id === restaurantId ? { ...r, plan } : r));
+        setPlanSuccess(restaurantId);
+        setTimeout(() => setPlanSuccess(null), 2000);
+      }
+    } catch {}
+    setSavingPlan(null);
   }
 
   async function handleSubmit(e: React.FormEvent) {
@@ -254,46 +280,96 @@ export default function RestaurantesPage() {
           <table className="w-full">
             <thead>
               <tr style={{ borderBottom: "1px solid var(--border)" }}>
-                {["Nome", "Slug", "Status", "Usuários", "Criado em"].map(h => (
-                  <th key={h} className="text-left text-xs font-medium px-6 py-4 uppercase tracking-wide"
+                {["Nome", "Slug", "Status", "Plano", "Reservas / mês", "Usuários", "Criado em", "Alterar plano"].map(h => (
+                  <th key={h} className="text-left text-xs font-medium px-4 py-3 uppercase tracking-wide"
                     style={{ color: "var(--foreground-muted)" }}>{h}</th>
                 ))}
               </tr>
             </thead>
             <tbody>
-              {restaurants.map((r, i) => (
+              {restaurants.map((r, i) => {
+                const planStyle = PLAN_STYLE[r.plan ?? "FREE"] ?? PLAN_STYLE.FREE;
+                const limits = getPlanLimits(r.plan ?? "FREE");
+                const reservLimit = limits.reservationsPerMonth === -1 ? "∞" : limits.reservationsPerMonth;
+                const isSaving = savingPlan === r.id;
+                const isSuccess = planSuccess === r.id;
+                return (
                 <tr key={r.id} className="hover:bg-white/[0.02] transition-colors"
                   style={{ borderBottom: i < restaurants.length - 1 ? "1px solid var(--border-subtle)" : undefined }}>
-                  <td className="px-6 py-4">
+                  <td className="px-4 py-3">
                     <div className="flex items-center gap-3">
                       <div className="w-8 h-8 rounded-lg flex items-center justify-center font-bold text-xs flex-shrink-0"
                         style={{ background: "var(--primary)20", color: "var(--primary)" }}>
                         {r.name?.[0]?.toUpperCase()}
                       </div>
-                      <span className="text-sm font-medium" style={{ color: "var(--foreground)" }}>{r.name}</span>
+                      <div>
+                        <span className="text-sm font-medium block" style={{ color: "var(--foreground)" }}>{r.name}</span>
+                        {r.planExpiresAt && (
+                          <span className="text-xs" style={{ color: "var(--foreground-muted)" }}>
+                            Expira {new Date(r.planExpiresAt).toLocaleDateString("pt-BR")}
+                          </span>
+                        )}
+                      </div>
                     </div>
                   </td>
-                  <td className="px-6 py-4">
-                    <span className="text-sm font-mono" style={{ color: "var(--foreground-muted)" }}>{r.slug}</span>
+                  <td className="px-4 py-3">
+                    <span className="text-xs font-mono" style={{ color: "var(--foreground-muted)" }}>{r.slug}</span>
                   </td>
-                  <td className="px-6 py-4">
-                    <span className="text-xs font-semibold px-2.5 py-1 rounded-full"
+                  <td className="px-4 py-3">
+                    <span className="text-xs font-semibold px-2 py-1 rounded-full"
                       style={r.isActive
                         ? { background: "var(--success-bg)", color: "var(--success)" }
                         : { background: "var(--danger-bg)", color: "var(--danger)" }}>
                       {r.isActive ? "Ativo" : "Inativo"}
                     </span>
                   </td>
-                  <td className="px-6 py-4">
+                  <td className="px-4 py-3">
+                    <span className="text-xs font-bold px-2.5 py-1 rounded-full"
+                      style={{ background: planStyle.bg, color: planStyle.color }}>
+                      {planStyle.label}
+                    </span>
+                  </td>
+                  <td className="px-4 py-3">
+                    <span className="text-sm" style={{ color: "var(--foreground-muted)" }}>
+                      {r.reservationsThisMonth ?? 0}
+                      <span className="text-xs opacity-60"> / {reservLimit}</span>
+                    </span>
+                  </td>
+                  <td className="px-4 py-3">
                     <span className="text-sm" style={{ color: "var(--foreground-muted)" }}>{r._count?.users ?? 0}</span>
                   </td>
-                  <td className="px-6 py-4">
-                    <span className="text-sm" style={{ color: "var(--foreground-muted)" }}>
+                  <td className="px-4 py-3">
+                    <span className="text-xs" style={{ color: "var(--foreground-muted)" }}>
                       {new Date(r.createdAt).toLocaleDateString("pt-BR")}
                     </span>
                   </td>
+                  <td className="px-4 py-3">
+                    <div className="flex items-center gap-2">
+                      <select
+                        value={r.plan ?? "FREE"}
+                        disabled={isSaving}
+                        onChange={e => handlePlanChange(r.id, e.target.value)}
+                        className="px-2.5 py-1.5 rounded-lg text-xs outline-none disabled:opacity-50"
+                        style={{
+                          background: "var(--surface-2)",
+                          border: `1px solid ${isSuccess ? "var(--success)" : "var(--border)"}`,
+                          color: "var(--foreground)",
+                        }}
+                      >
+                        <option value="FREE">Free</option>
+                        <option value="PRO">Pro</option>
+                        <option value="PREMIUM">Premium</option>
+                      </select>
+                      {isSuccess && <Check size={14} style={{ color: "var(--success)", flexShrink: 0 }} />}
+                      {isSaving && (
+                        <span className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin flex-shrink-0"
+                          style={{ color: "var(--foreground-muted)" }} />
+                      )}
+                    </div>
+                  </td>
                 </tr>
-              ))}
+                );
+              })}
             </tbody>
           </table>
         )}
