@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Settings, Clock, Bell, CreditCard, Globe, Check, AlertCircle, Loader2, QrCode, Copy } from "lucide-react";
+import { Settings, Clock, Bell, CreditCard, Globe, Check, AlertCircle, Loader2, QrCode, Copy, Palette, Image } from "lucide-react";
 import { useSession } from "next-auth/react";
 import { useRestaurant } from "@/contexts/RestaurantContext";
 import PlanGate from "@/components/admin/PlanGate";
@@ -71,6 +71,8 @@ export default function ConfiguracoesPage() {
   const [email, setEmail] = useState("");
   const [address, setAddress] = useState("");
   const [slug, setSlug] = useState("");
+  const [primaryColor, setPrimaryColor] = useState("#f07316");
+  const [logoUrl, setLogoUrl] = useState("");
   const [loadingGeral, setLoadingGeral] = useState(false);
 
   // Horários
@@ -102,6 +104,8 @@ export default function ConfiguracoesPage() {
           setEmail(data.email ?? "");
           setAddress(data.address ?? "");
           setSlug(data.slug ?? "");
+          setPrimaryColor(data.primaryColor ?? "#f07316");
+          setLogoUrl(data.logoUrl ?? "");
         }
       })
       .catch(() => {})
@@ -147,7 +151,7 @@ export default function ConfiguracoesPage() {
       const res = await fetch(`/api/restaurants/${restaurantId}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name, phone, email, address }),
+        body: JSON.stringify({ name, phone, email, address, primaryColor, logoUrl }),
       });
       if (res.ok) {
         setSaveState("success");
@@ -345,6 +349,67 @@ export default function ConfiguracoesPage() {
                         className="w-full px-3 py-2.5 rounded-lg text-sm outline-none"
                         style={{ background: "var(--surface-2)", border: "1px solid var(--border)", color: "var(--foreground)" }}
                       />
+                    </div>
+                  </div>
+
+                  {/* Identidade Visual */}
+                  <div className="border-t pt-5" style={{ borderColor: "var(--border)" }}>
+                    <p className="text-sm font-semibold mb-4 flex items-center gap-2" style={{ color: "var(--foreground)" }}>
+                      <Palette size={14} /> Identidade Visual
+                    </p>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-sm mb-1.5" style={{ color: "var(--foreground-muted)" }}>
+                          Cor da marca
+                        </label>
+                        <div className="flex items-center gap-3">
+                          <input
+                            type="color"
+                            value={primaryColor}
+                            onChange={e => setPrimaryColor(e.target.value)}
+                            className="w-10 h-10 rounded-lg cursor-pointer border-0 bg-transparent"
+                            title="Escolher cor"
+                          />
+                          <input
+                            type="text"
+                            value={primaryColor}
+                            onChange={e => setPrimaryColor(e.target.value)}
+                            placeholder="#f07316"
+                            className="flex-1 px-3 py-2.5 rounded-lg text-sm outline-none font-mono"
+                            style={{ background: "var(--surface-2)", border: "1px solid var(--border)", color: "var(--foreground)" }}
+                          />
+                          <div className="w-9 h-9 rounded-lg flex-shrink-0 border"
+                            style={{ background: primaryColor, borderColor: "var(--border)" }} />
+                        </div>
+                        <p className="text-xs mt-1" style={{ color: "var(--foreground-muted)" }}>
+                          Usada no cardápio digital e widget público
+                        </p>
+                      </div>
+                      <div>
+                        <label className="block text-sm mb-1.5 flex items-center gap-1.5" style={{ color: "var(--foreground-muted)" }}>
+                          <Image size={13} /> URL do Logotipo
+                        </label>
+                        <input
+                          type="url"
+                          placeholder="https://seusite.com/logo.png"
+                          value={logoUrl}
+                          onChange={e => setLogoUrl(e.target.value)}
+                          className="w-full px-3 py-2.5 rounded-lg text-sm outline-none"
+                          style={{ background: "var(--surface-2)", border: "1px solid var(--border)", color: "var(--foreground)" }}
+                        />
+                        {logoUrl && (
+                          <div className="mt-2 flex items-center gap-2">
+                            {/* eslint-disable-next-line @next/next/no-img-element */}
+                            <img src={logoUrl} alt="Logo preview" className="w-10 h-10 rounded-lg object-cover border"
+                              style={{ borderColor: "var(--border)" }}
+                              onError={e => { (e.target as HTMLImageElement).style.display = "none"; }} />
+                            <span className="text-xs" style={{ color: "var(--foreground-muted)" }}>Pré-visualização</span>
+                          </div>
+                        )}
+                        <p className="text-xs mt-1" style={{ color: "var(--foreground-muted)" }}>
+                          Link direto para a imagem (JPG, PNG, SVG)
+                        </p>
+                      </div>
                     </div>
                   </div>
 

@@ -76,6 +76,14 @@ export default function LoginPage() {
               </p>
             )}
 
+            <div className="flex justify-end">
+              <a href="/esqueci-senha"
+                className="text-xs transition-opacity hover:opacity-70"
+                style={{ color: "var(--primary)" }}>
+                Esqueci minha senha
+              </a>
+            </div>
+
             <button type="submit" disabled={loading}
               className="w-full py-3.5 rounded-xl font-semibold text-sm flex items-center justify-center gap-2 shadow-sm transition-all hover:opacity-90 disabled:opacity-50"
               style={{ background: "var(--primary)", color: "#fff" }}>

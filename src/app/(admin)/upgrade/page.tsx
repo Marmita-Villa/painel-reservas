@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Check, Zap, Crown, Loader2 } from "lucide-react";
+import { Check, Zap, Crown, Loader2, Settings } from "lucide-react";
 import { useRestaurant } from "@/contexts/RestaurantContext";
 
 const plans = [
@@ -65,6 +65,24 @@ export default function UpgradePage() {
   const { restaurant } = useRestaurant();
   const currentPlan = (restaurant as any)?.plan ?? "FREE";
   const [loading, setLoading] = useState<string | null>(null);
+  const [portalLoading, setPortalLoading] = useState(false);
+
+  async function handlePortal() {
+    setPortalLoading(true);
+    try {
+      const res = await fetch("/api/portal", { method: "POST" });
+      const data = await res.json();
+      if (data.url) {
+        window.location.href = data.url;
+      } else {
+        alert(data.error ?? "Erro ao abrir portal de assinatura");
+      }
+    } catch {
+      alert("Erro ao conectar com o servidor");
+    } finally {
+      setPortalLoading(false);
+    }
+  }
 
   async function handleSubscribe(planKey: string) {
     if (planKey === "FREE") return;
@@ -189,6 +207,21 @@ export default function UpgradePage() {
       <p className="text-center text-xs" style={{ color: "var(--foreground-muted)" }}>
         Pagamento seguro via Stripe · Cancele a qualquer momento · Sem fidelidade
       </p>
+
+      {/* Portal de assinatura — só aparece para planos pagos */}
+      {currentPlan !== "FREE" && (
+        <div className="flex justify-center">
+          <button
+            onClick={handlePortal}
+            disabled={portalLoading}
+            className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-medium transition-all hover:opacity-80 disabled:opacity-50"
+            style={{ background: "var(--surface-2)", color: "var(--foreground-muted)", border: "1px solid var(--border)" }}>
+            {portalLoading
+              ? <><Loader2 size={14} className="animate-spin" /> Abrindo...</>
+              : <><Settings size={14} /> Gerenciar assinatura / Cancelar</>}
+          </button>
+        </div>
+      )}
     </div>
   );
 }
