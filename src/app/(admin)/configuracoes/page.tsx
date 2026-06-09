@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { Settings, Clock, Bell, CreditCard, Globe, Check, AlertCircle, Loader2, QrCode, Copy, Palette, Image } from "lucide-react";
+import ImageUpload from "@/components/admin/ImageUpload";
 import { useSession } from "next-auth/react";
 import { useRestaurant } from "@/contexts/RestaurantContext";
 import PlanGate from "@/components/admin/PlanGate";
@@ -386,29 +387,14 @@ export default function ConfiguracoesPage() {
                         </p>
                       </div>
                       <div>
-                        <label className="block text-sm mb-1.5 flex items-center gap-1.5" style={{ color: "var(--foreground-muted)" }}>
-                          <Image size={13} /> URL do Logotipo
-                        </label>
-                        <input
-                          type="url"
-                          placeholder="https://seusite.com/logo.png"
+                        <ImageUpload
+                          label="Logotipo"
                           value={logoUrl}
-                          onChange={e => setLogoUrl(e.target.value)}
-                          className="w-full px-3 py-2.5 rounded-lg text-sm outline-none"
-                          style={{ background: "var(--surface-2)", border: "1px solid var(--border)", color: "var(--foreground)" }}
+                          onChange={setLogoUrl}
+                          folder="reserva360/logos"
+                          aspectRatio="wide"
+                          hint="JPG, PNG, SVG — máx. 5MB"
                         />
-                        {logoUrl && (
-                          <div className="mt-2 flex items-center gap-2">
-                            {/* eslint-disable-next-line @next/next/no-img-element */}
-                            <img src={logoUrl} alt="Logo preview" className="w-10 h-10 rounded-lg object-cover border"
-                              style={{ borderColor: "var(--border)" }}
-                              onError={e => { (e.target as HTMLImageElement).style.display = "none"; }} />
-                            <span className="text-xs" style={{ color: "var(--foreground-muted)" }}>Pré-visualização</span>
-                          </div>
-                        )}
-                        <p className="text-xs mt-1" style={{ color: "var(--foreground-muted)" }}>
-                          Link direto para a imagem (JPG, PNG, SVG)
-                        </p>
                       </div>
                     </div>
                   </div>

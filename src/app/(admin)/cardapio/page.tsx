@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from "react";
 import { Plus, Trash2, Edit3, ChevronDown, ChevronUp, UtensilsCrossed, X, Check, Loader2, Tag } from "lucide-react";
 import { useRestaurant } from "@/contexts/RestaurantContext";
 import PlanGate from "@/components/admin/PlanGate";
+import ImageUpload from "@/components/admin/ImageUpload";
 
 const TAGS = ["Vegetariano 🥦", "Vegano 🌱", "Sem glúten 🌾", "Sem lactose 🥛", "Picante 🌶️", "Novidade ✨", "Mais pedido ⭐"];
 
@@ -76,22 +77,14 @@ function ItemForm({ categoryId, item, onSave, onCancel }: {
             style={{ background: "var(--surface)", border: "1px solid var(--border)", color: "var(--foreground)" }} />
         </div>
         <div className="col-span-2">
-          <label className="block text-xs font-semibold mb-1.5 uppercase tracking-wide" style={{ color: "var(--foreground-muted)" }}>
-            Foto do prato (URL)
-          </label>
-          <div className="flex gap-2">
-            <input type="url" value={imageUrl} onChange={e => setImageUrl(e.target.value)}
-              placeholder="https://... (link de uma imagem)"
-              className="flex-1 px-3 py-2.5 rounded-xl text-sm outline-none"
-              style={{ background: "var(--surface)", border: "1px solid var(--border)", color: "var(--foreground)" }} />
-            {imageUrl && (
-              <img src={imageUrl} alt="preview" className="w-12 h-12 rounded-lg object-cover flex-shrink-0"
-                onError={e => (e.currentTarget.style.display = "none")} />
-            )}
-          </div>
-          <p className="text-xs mt-1" style={{ color: "var(--foreground-muted)" }}>
-            Cole o link de uma foto do prato (Google Drive público, Imgur, etc.)
-          </p>
+          <ImageUpload
+            value={imageUrl}
+            onChange={setImageUrl}
+            folder="reserva360/menu"
+            label="Foto do prato"
+            hint="JPG, PNG, WebP — máx. 5MB"
+            aspectRatio="wide"
+          />
         </div>
       </div>
 
