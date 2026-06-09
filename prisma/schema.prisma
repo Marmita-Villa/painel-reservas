@@ -39,6 +39,7 @@ model Restaurant {
   email        String?
   address      String?
   logoUrl      String?
+  coverUrl     String?
   primaryColor String   @default("#f07316")
   timezone     String   @default("America/Sao_Paulo")
   isActive     Boolean  @default(true)

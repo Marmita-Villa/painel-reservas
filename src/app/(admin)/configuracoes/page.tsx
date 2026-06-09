@@ -74,6 +74,7 @@ export default function ConfiguracoesPage() {
   const [slug, setSlug] = useState("");
   const [primaryColor, setPrimaryColor] = useState("#f07316");
   const [logoUrl, setLogoUrl] = useState("");
+  const [coverUrl, setCoverUrl] = useState("");
   const [loadingGeral, setLoadingGeral] = useState(false);
 
   // Horários
@@ -107,6 +108,7 @@ export default function ConfiguracoesPage() {
           setSlug(data.slug ?? "");
           setPrimaryColor(data.primaryColor ?? "#f07316");
           setLogoUrl(data.logoUrl ?? "");
+          setCoverUrl(data.coverUrl ?? "");
         }
       })
       .catch(() => {})
@@ -152,7 +154,7 @@ export default function ConfiguracoesPage() {
       const res = await fetch(`/api/restaurants/${restaurantId}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name, phone, email, address, primaryColor, logoUrl }),
+        body: JSON.stringify({ name, phone, email, address, primaryColor, logoUrl, coverUrl }),
       });
       if (res.ok) {
         setSaveState("success");
@@ -394,6 +396,16 @@ export default function ConfiguracoesPage() {
                           folder="reserva360/logos"
                           aspectRatio="wide"
                           hint="JPG, PNG, SVG — máx. 5MB"
+                        />
+                      </div>
+                      <div>
+                        <ImageUpload
+                          label="Banner do cardápio digital"
+                          value={coverUrl}
+                          onChange={setCoverUrl}
+                          folder="reserva360/covers"
+                          aspectRatio="wide"
+                          hint="Foto do ambiente, prato ou fachada — JPG, PNG — máx. 5MB. Recomendado: 1200×400px"
                         />
                       </div>
                     </div>

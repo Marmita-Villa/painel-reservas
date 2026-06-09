@@ -40,7 +40,7 @@ export async function PUT(
   }
 
   const body = await req.json();
-  const { name, phone, email, address, primaryColor, logoUrl } = body;
+  const { name, phone, email, address, primaryColor, logoUrl, coverUrl } = body;
 
   const updated = await prisma.restaurant.update({
     where: { id },
@@ -51,6 +51,7 @@ export async function PUT(
       ...(address !== undefined && { address: String(address) }),
       ...(primaryColor !== undefined && { primaryColor: String(primaryColor) }),
       ...(logoUrl !== undefined && { logoUrl: logoUrl === "" ? null : String(logoUrl) }),
+      ...(coverUrl !== undefined && { coverUrl: coverUrl === "" ? null : String(coverUrl) }),
     },
   });
 

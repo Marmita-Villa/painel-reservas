@@ -13,8 +13,8 @@ interface MenuItem {
 interface MenuCategory { id: string; name: string; description?: string | null; items: MenuItem[]; }
 interface Restaurant {
   name: string; slug: string; address?: string | null;
-  phone?: string | null; logoUrl?: string | null; plan: string;
-  primaryColor?: string | null;
+  phone?: string | null; logoUrl?: string | null; coverUrl?: string | null;
+  plan: string; primaryColor?: string | null;
 }
 
 function formatPrice(p: number) {
@@ -195,20 +195,42 @@ export default function MenuPageClient({
       {/* ── HERO ── */}
       {!search && (
         <div className="relative overflow-hidden" style={{
-          background: theme === "dark"
-            ? `linear-gradient(160deg, #1a1d27 0%, ${hexAlpha(brand, 0.18)} 50%, ${hexAlpha(brand, 0.32)} 100%)`
-            : `linear-gradient(160deg, #ffffff 0%, ${hexAlpha(brand, 0.06)} 50%, ${hexAlpha(brand, 0.14)} 100%)`,
+          minHeight: restaurant.coverUrl ? 320 : undefined,
           borderBottom: `1px solid ${hexAlpha(brand, theme === "dark" ? 0.25 : 0.15)}`,
         }}>
-          {/* glow blobs */}
-          <div className="absolute pointer-events-none" style={{
-            top: -60, right: -60, width: 280, height: 280, borderRadius: "50%",
-            background: hexAlpha(brand, theme === "dark" ? 0.14 : 0.08), filter: "blur(70px)",
-          }} />
-          <div className="absolute pointer-events-none" style={{
-            bottom: -40, left: -40, width: 200, height: 200, borderRadius: "50%",
-            background: hexAlpha(brand, theme === "dark" ? 0.08 : 0.05), filter: "blur(50px)",
-          }} />
+          {/* Banner image or gradient background */}
+          {restaurant.coverUrl ? (
+            <>
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src={restaurant.coverUrl} alt="banner"
+                style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover", objectPosition: "center" }} />
+              {/* overlay escuro/claro sobre a foto */}
+              <div style={{
+                position: "absolute", inset: 0,
+                background: theme === "dark"
+                  ? "linear-gradient(to bottom, rgba(26,29,39,0.55) 0%, rgba(26,29,39,0.85) 100%)"
+                  : "linear-gradient(to bottom, rgba(255,255,255,0.35) 0%, rgba(255,255,255,0.82) 100%)",
+              }} />
+            </>
+          ) : (
+            <div style={{
+              position: "absolute", inset: 0,
+              background: theme === "dark"
+                ? `linear-gradient(160deg, #1a1d27 0%, ${hexAlpha(brand, 0.18)} 50%, ${hexAlpha(brand, 0.32)} 100%)`
+                : `linear-gradient(160deg, #ffffff 0%, ${hexAlpha(brand, 0.06)} 50%, ${hexAlpha(brand, 0.14)} 100%)`,
+            }} />
+          )}
+          {/* glow blobs (sem banner) */}
+          {!restaurant.coverUrl && <>
+            <div className="absolute pointer-events-none" style={{
+              top: -60, right: -60, width: 280, height: 280, borderRadius: "50%",
+              background: hexAlpha(brand, theme === "dark" ? 0.14 : 0.08), filter: "blur(70px)",
+            }} />
+            <div className="absolute pointer-events-none" style={{
+              bottom: -40, left: -40, width: 200, height: 200, borderRadius: "50%",
+              background: hexAlpha(brand, theme === "dark" ? 0.08 : 0.05), filter: "blur(50px)",
+            }} />
+          </>}
 
           <div style={{ maxWidth: 1080, margin: "0 auto", padding: "2.5rem 1.25rem 2rem", position: "relative", zIndex: 1 }}>
 
