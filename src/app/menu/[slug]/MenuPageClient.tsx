@@ -190,7 +190,7 @@ export default function MenuPageClient({
   }, [categories]);
 
   return (
-    <div style={{ minHeight: "100vh", background: C.bg, color: C.text, fontFamily: "'Inter', 'Segoe UI', system-ui, sans-serif", transition: "background 0.3s, color 0.3s" }}>
+    <div style={{ minHeight: "100vh", background: C.bg, color: C.text, fontFamily: "var(--font-inter, 'Inter', system-ui, sans-serif)", transition: "background 0.3s, color 0.3s" }}>
 
       {/* ── HERO ── */}
       {!search && (
@@ -259,7 +259,7 @@ export default function MenuPageClient({
 
               {/* Restaurant name */}
               <div>
-                <h1 style={{ fontSize: "1.875rem", fontWeight: 900, letterSpacing: "-0.03em", color: C.text, lineHeight: 1.1 }}>
+                <h1 style={{ fontSize: "2.25rem", fontWeight: 900, letterSpacing: "-0.01em", color: C.text, lineHeight: 1.1, fontFamily: "var(--font-playfair, Georgia, serif)", fontStyle: "italic" }}>
                   {restaurant.name}
                 </h1>
 
@@ -335,7 +335,7 @@ export default function MenuPageClient({
         {/* Category tabs */}
         {!search && (
           <div style={{ maxWidth: 1080, margin: "0 auto" }}>
-            <div style={{ display: "flex", gap: "0.375rem", overflowX: "auto", padding: "0 1rem 0.75rem", scrollbarWidth: "none" }}>
+            <div style={{ display: "flex", gap: "0.375rem", overflowX: "auto", padding: "0 1rem 0.75rem", scrollbarWidth: "none", justifyContent: "center", flexWrap: "wrap" }}>
               {categories.map(cat => {
                 const isActive = activeCategory === cat.id;
                 return (
@@ -361,7 +361,7 @@ export default function MenuPageClient({
         {/* Tag filters */}
         {allTags.length > 0 && !search && (
           <div style={{ maxWidth: 1080, margin: "0 auto", borderTop: `1px solid ${C.divider}` }}>
-            <div style={{ display: "flex", gap: "0.375rem", overflowX: "auto", padding: "0.5rem 1rem 0.625rem", scrollbarWidth: "none", alignItems: "center" }}>
+            <div style={{ display: "flex", gap: "0.375rem", overflowX: "auto", padding: "0.5rem 1rem 0.625rem", scrollbarWidth: "none", alignItems: "center", justifyContent: "center", flexWrap: "wrap" }}>
               <span style={{ fontSize: "0.7rem", fontWeight: 700, color: C.textDim, flexShrink: 0, textTransform: "uppercase", letterSpacing: "0.05em" }}>
                 {lang === "en" ? "Filter" : "Filtrar"}
               </span>
@@ -429,7 +429,7 @@ export default function MenuPageClient({
                 {/* Category heading */}
                 <div style={{ display: "flex", alignItems: "center", gap: "0.75rem", marginBottom: "1rem" }}>
                   <div style={{ width: 4, height: 22, borderRadius: 4, background: brand, flexShrink: 0 }} />
-                  <h2 style={{ fontSize: "1.125rem", fontWeight: 800, color: C.text, letterSpacing: "-0.02em" }}>
+                  <h2 style={{ fontSize: "1.25rem", fontWeight: 700, color: C.text, letterSpacing: "0", fontFamily: "var(--font-playfair, Georgia, serif)", fontStyle: "italic" }}>
                     {catName(cat.name, lang)}
                   </h2>
                   <div style={{ flex: 1, height: 1, background: C.divider }} />
