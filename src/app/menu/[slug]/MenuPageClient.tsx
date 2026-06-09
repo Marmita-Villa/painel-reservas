@@ -286,12 +286,15 @@ export default function MenuPageClient({
                   src={restaurant.logoUrl}
                   alt={restaurant.name}
                   style={{
-                    maxHeight: 120,
-                    maxWidth: 280,
+                    maxHeight: 130,
+                    maxWidth: 300,
                     width: "auto",
                     height: "auto",
                     objectFit: "contain",
-                    filter: `drop-shadow(0 8px 24px ${hexAlpha(brand, 0.35)})`,
+                    mixBlendMode: theme === "light" ? "multiply" : "normal",
+                    filter: theme === "dark"
+                      ? `drop-shadow(0 8px 28px ${hexAlpha(brand, 0.45)})`
+                      : `drop-shadow(0 6px 20px ${hexAlpha(brand, 0.3)})`,
                   }}
                 />
               ) : (
