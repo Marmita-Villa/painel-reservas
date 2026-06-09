@@ -70,7 +70,7 @@ export default function LandingPage() {
         <div className="max-w-6xl mx-auto px-5 h-16 flex items-center justify-between">
           <a href="/">
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src="/logo.png" alt="Reserva360" style={{ height: 36, objectFit: "contain" }} />
+            <img src="/logo.png" alt="Reserva360" style={{ height: 64, objectFit: "contain" }} />
           </a>
 
           {/* Desktop nav */}
@@ -427,7 +427,7 @@ export default function LandingPage() {
       <footer className="border-t py-10" style={{ borderColor: "#e4e4e7" }}>
         <div className="max-w-6xl mx-auto px-5 flex flex-col sm:flex-row items-center justify-between gap-4">
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src="/logo.png" alt="Reserva360" style={{ height: 28, objectFit: "contain" }} />
+          <img src="/logo.png" alt="Reserva360" style={{ height: 44, objectFit: "contain" }} />
           <div className="flex gap-6">
             {[["#funcionalidades", "Funcionalidades"], ["#planos", "Planos"], ["/login", "Entrar"]].map(([href, label]) => (
               <a key={href} href={href} className="text-xs transition-opacity hover:opacity-60"
