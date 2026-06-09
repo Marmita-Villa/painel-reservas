@@ -280,26 +280,30 @@ export default function MenuPageClient({
                 {lang === "en" ? "Digital Menu" : "Cardápio Digital"}
               </div>
 
-              {/* Logo */}
-              <div style={{
-                ...getLogoSize(restaurant.logoShape),
-                maxWidth: restaurant.logoShape === "rectangle" ? 260 : 112,
-                borderRadius: getLogoRadius(restaurant.logoShape),
-                overflow: "hidden",
-                display: "flex", alignItems: "center", justifyContent: "center",
-                background: restaurant.logoUrl ? (theme === "dark" ? "rgba(255,255,255,0.06)" : "rgba(255,255,255,0.9)") : brand,
-                boxShadow: `0 16px 48px ${hexAlpha(brand, 0.4)}, 0 0 0 5px ${hexAlpha(brand, 0.18)}`,
-                flexShrink: 0, padding: restaurant.logoUrl ? 6 : 0,
-              }}>
-                {restaurant.logoUrl
-                  ? <img src={restaurant.logoUrl} alt={restaurant.name} style={{
-                      maxWidth: "100%", maxHeight: "100%",
-                      width: restaurant.logoShape === "rectangle" ? "auto" : "100%",
-                      height: "100%", objectFit: "contain",
-                      borderRadius: getLogoRadius(restaurant.logoShape),
-                    }} />
-                  : <span style={{ fontSize: "3rem", fontWeight: 900, color: "#fff" }}>{restaurant.name[0]}</span>}
-              </div>
+              {/* Logo — sem container, imagem livre */}
+              {restaurant.logoUrl ? (
+                <img
+                  src={restaurant.logoUrl}
+                  alt={restaurant.name}
+                  style={{
+                    maxHeight: 120,
+                    maxWidth: 280,
+                    width: "auto",
+                    height: "auto",
+                    objectFit: "contain",
+                    filter: `drop-shadow(0 8px 24px ${hexAlpha(brand, 0.35)})`,
+                  }}
+                />
+              ) : (
+                <div style={{
+                  width: 100, height: 100, borderRadius: "50%",
+                  display: "flex", alignItems: "center", justifyContent: "center",
+                  background: brand,
+                  boxShadow: `0 12px 36px ${hexAlpha(brand, 0.45)}`,
+                }}>
+                  <span style={{ fontSize: "2.75rem", fontWeight: 900, color: "#fff" }}>{restaurant.name[0]}</span>
+                </div>
+              )}
 
               {/* Restaurant name */}
               <div>
