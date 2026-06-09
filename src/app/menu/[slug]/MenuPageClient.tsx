@@ -86,42 +86,39 @@ export default function MenuPageClient({
     setActiveCategory(id);
     const el = categoryRefs.current[id];
     if (!el) return;
-    const container = document.getElementById("menu-scroll");
-    if (!container) return;
-    const headerH = document.getElementById("sticky-header")?.offsetHeight ?? 160;
-    const elTop = el.getBoundingClientRect().top - container.getBoundingClientRect().top + container.scrollTop;
-    // Block IntersectionObserver from overwriting activeCategory during programmatic scroll
+    const headerH = document.getElementById("sticky-header")?.offsetHeight ?? 120;
+    const top = el.getBoundingClientRect().top + window.scrollY - headerH - 16;
     scrollingRef.current = true;
     clearTimeout((scrollingRef as any)._timer);
-    (scrollingRef as any)._timer = setTimeout(() => { scrollingRef.current = false; }, 800);
-    container.scrollTo({ top: elTop - headerH - 16, behavior: "smooth" });
+    (scrollingRef as any)._timer = setTimeout(() => { scrollingRef.current = false; }, 1000);
+    window.scrollTo({ top, behavior: "smooth" });
   }
 
   useEffect(() => {
-    const el = document.getElementById("menu-scroll");
-    if (!el) return;
     const handler = () => {
-      setShowBackToTop(el.scrollTop > 400);
-      setHeaderScrolled(el.scrollTop > 80);
+      setShowBackToTop(window.scrollY > 400);
+      setHeaderScrolled(window.scrollY > 80);
     };
-    el.addEventListener("scroll", handler);
-    return () => el.removeEventListener("scroll", handler);
+    window.addEventListener("scroll", handler);
+    return () => window.removeEventListener("scroll", handler);
   }, []);
 
   // IntersectionObserver to track active category while scrolling
   useEffect(() => {
-    const container = document.getElementById("menu-scroll");
-    if (!container || categories.length === 0) return;
+    if (categories.length === 0) return;
     const obs = new IntersectionObserver(
       (entries) => {
-        if (scrollingRef.current) return; // ignore during programmatic scroll
-        const visible = entries.filter(e => e.isIntersecting);
+        if (scrollingRef.current) return;
+        // pick the topmost visible section
+        const visible = entries
+          .filter(e => e.isIntersecting)
+          .sort((a, b) => a.boundingClientRect.top - b.boundingClientRect.top);
         if (visible.length > 0) {
           const id = visible[0].target.getAttribute("data-cat-id");
           if (id) setActiveCategory(id);
         }
       },
-      { root: container, rootMargin: "-30% 0px -60% 0px", threshold: 0 }
+      { root: null, rootMargin: "-10% 0px -80% 0px", threshold: 0 }
     );
     categories.forEach(cat => {
       const el = categoryRefs.current[cat.id];
@@ -482,7 +479,7 @@ export default function MenuPageClient({
       {/* Back to top */}
       {showBackToTop && (
         <button
-          onClick={() => document.getElementById("menu-scroll")?.scrollTo({ top: 0, behavior: "smooth" })}
+          onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
           className="fixed bottom-6 right-6 w-12 h-12 rounded-2xl flex items-center justify-center shadow-xl transition-all hover:opacity-80 z-20"
           style={{ background: brand, color: "#fff", boxShadow: `0 8px 24px ${hexAlpha(brand, 0.45)}` }}>
           <ChevronUp size={20} />
