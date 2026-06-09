@@ -66,6 +66,7 @@ export default function MenuPageClient({
   const [showBackToTop, setShowBackToTop] = useState(false);
   const [headerScrolled, setHeaderScrolled] = useState(false);
   const categoryRefs = useRef<Record<string, HTMLElement | null>>({});
+  const scrollingRef = useRef(false);
 
   const allTags = Array.from(new Set(categories.flatMap(c => c.items.flatMap(i => i.tags))));
   const totalItems = categories.reduce((acc, c) => acc + c.items.length, 0);
@@ -89,6 +90,10 @@ export default function MenuPageClient({
     if (!container) return;
     const headerH = document.getElementById("sticky-header")?.offsetHeight ?? 160;
     const elTop = el.getBoundingClientRect().top - container.getBoundingClientRect().top + container.scrollTop;
+    // Block IntersectionObserver from overwriting activeCategory during programmatic scroll
+    scrollingRef.current = true;
+    clearTimeout((scrollingRef as any)._timer);
+    (scrollingRef as any)._timer = setTimeout(() => { scrollingRef.current = false; }, 800);
     container.scrollTo({ top: elTop - headerH - 16, behavior: "smooth" });
   }
 
@@ -109,6 +114,7 @@ export default function MenuPageClient({
     if (!container || categories.length === 0) return;
     const obs = new IntersectionObserver(
       (entries) => {
+        if (scrollingRef.current) return; // ignore during programmatic scroll
         const visible = entries.filter(e => e.isIntersecting);
         if (visible.length > 0) {
           const id = visible[0].target.getAttribute("data-cat-id");
