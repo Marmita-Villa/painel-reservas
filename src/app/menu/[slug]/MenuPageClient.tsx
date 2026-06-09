@@ -33,7 +33,7 @@ const TAG_COLORS: Record<string, { bg: string; color: string }> = {
 };
 
 function TagBadge({ tag }: { tag: string }) {
-  const style = TAG_COLORS[tag] ?? { bg: "#f4f4f5", color: "#71717a" };
+  const style = TAG_COLORS[tag] ?? { bg: "#f4f4f5", color: "#8b92a5" };
   return (
     <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium"
       style={{ background: style.bg, color: style.color }}>
@@ -128,13 +128,13 @@ export default function MenuPageClient({
   }, [categories]);
 
   return (
-    <div className="min-h-screen flex flex-col" style={{ background: "#0c0c0e", color: "#f4f4f5" }}>
+    <div className="min-h-screen flex flex-col" style={{ background: "#16181d", color: "#f4f4f5" }}>
 
       {/* ── HERO ── */}
       {!search && (
         <div className="relative overflow-hidden"
           style={{
-            background: `linear-gradient(135deg, #0c0c0e 0%, ${hexAlpha(brand, 0.25)} 60%, ${hexAlpha(brand, 0.45)} 100%)`,
+            background: `linear-gradient(135deg, #16181d 0%, ${hexAlpha(brand, 0.25)} 60%, ${hexAlpha(brand, 0.45)} 100%)`,
             borderBottom: `1px solid ${hexAlpha(brand, 0.3)}`,
           }}>
           {/* decorative glow */}
@@ -163,16 +163,16 @@ export default function MenuPageClient({
                 </h1>
                 <div className="flex flex-wrap gap-3 mt-2">
                   {restaurant.address && (
-                    <span className="flex items-center gap-1 text-xs" style={{ color: "#a1a1aa" }}>
+                    <span className="flex items-center gap-1 text-xs" style={{ color: "#9ca3af" }}>
                       <MapPin size={11} style={{ color: brand }} /> {restaurant.address}
                     </span>
                   )}
                   {restaurant.phone && (
-                    <span className="flex items-center gap-1 text-xs" style={{ color: "#a1a1aa" }}>
+                    <span className="flex items-center gap-1 text-xs" style={{ color: "#9ca3af" }}>
                       <Phone size={11} style={{ color: brand }} /> {restaurant.phone}
                     </span>
                   )}
-                  <span className="flex items-center gap-1 text-xs" style={{ color: "#a1a1aa" }}>
+                  <span className="flex items-center gap-1 text-xs" style={{ color: "#9ca3af" }}>
                     <UtensilsCrossed size={11} style={{ color: brand }} />
                     {totalItems} {lang === "en" ? "items" : "itens"} · {categories.length} {lang === "en" ? "categories" : "categorias"}
                   </span>
@@ -196,8 +196,8 @@ export default function MenuPageClient({
       {/* ── STICKY HEADER (search + categories + tag filters) ── */}
       <header id="sticky-header" className="sticky top-0 z-30 transition-all"
         style={{
-          background: headerScrolled ? "rgba(12,12,14,0.97)" : "#18181b",
-          borderBottom: `1px solid ${headerScrolled ? hexAlpha(brand, 0.2) : "#27272a"}`,
+          background: headerScrolled ? "rgba(12,12,14,0.97)" : "#1e2028",
+          borderBottom: `1px solid ${headerScrolled ? hexAlpha(brand, 0.2) : "#2e3140"}`,
           backdropFilter: "blur(12px)",
         }}>
 
@@ -205,19 +205,19 @@ export default function MenuPageClient({
         <div className="max-w-3xl mx-auto px-4 pt-3 pb-2">
           <div className="flex items-center gap-2">
             <div className="relative flex-1">
-              <Search size={14} className="absolute left-3.5 top-1/2 -translate-y-1/2" style={{ color: "#52525b" }} />
+              <Search size={14} className="absolute left-3.5 top-1/2 -translate-y-1/2" style={{ color: "#6b7280" }} />
               <input
                 type="text"
                 value={search}
                 onChange={e => setSearch(e.target.value)}
                 placeholder={lang === "en" ? "Search dishes..." : "Buscar pratos..."}
                 className="w-full pl-9 pr-9 py-2.5 rounded-xl text-sm outline-none"
-                style={{ background: "#1c1c1f", border: `1px solid ${search ? brand : "#3f3f46"}`, color: "#fafafa",
+                style={{ background: "#252830", border: `1px solid ${search ? brand : "#3a3f52"}`, color: "#fafafa",
                   boxShadow: search ? `0 0 0 2px ${hexAlpha(brand, 0.15)}` : "none" }}
               />
               {search && (
                 <button onClick={() => setSearch("")} className="absolute right-3 top-1/2 -translate-y-1/2">
-                  <X size={14} style={{ color: "#71717a" }} />
+                  <X size={14} style={{ color: "#8b92a5" }} />
                 </button>
               )}
             </div>
@@ -239,9 +239,9 @@ export default function MenuPageClient({
                 <button key={cat.id} onClick={() => scrollToCategory(cat.id)}
                   className="flex-shrink-0 flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-semibold transition-all whitespace-nowrap"
                   style={{
-                    background: activeCategory === cat.id ? brand : "#1c1c1f",
-                    color: activeCategory === cat.id ? "#fff" : "#71717a",
-                    border: `1px solid ${activeCategory === cat.id ? brand : "#3f3f46"}`,
+                    background: activeCategory === cat.id ? brand : "#252830",
+                    color: activeCategory === cat.id ? "#fff" : "#8b92a5",
+                    border: `1px solid ${activeCategory === cat.id ? brand : "#3a3f52"}`,
                     boxShadow: activeCategory === cat.id ? `0 2px 12px ${hexAlpha(brand, 0.35)}` : "none",
                   }}>
                   {cat.name}
@@ -256,17 +256,17 @@ export default function MenuPageClient({
 
         {/* Tag filters */}
         {allTags.length > 0 && !search && (
-          <div className="max-w-3xl mx-auto border-t" style={{ borderColor: "#1c1c1f" }}>
+          <div className="max-w-3xl mx-auto border-t" style={{ borderColor: "#252830" }}>
             <div className="flex gap-1.5 overflow-x-auto px-4 py-2 scrollbar-hide items-center">
-              <span className="text-xs flex-shrink-0 font-medium" style={{ color: "#3f3f46" }}>
+              <span className="text-xs flex-shrink-0 font-medium" style={{ color: "#3a3f52" }}>
                 {lang === "en" ? "Filter" : "Filtrar"}
               </span>
               <button onClick={() => setActiveTag(null)}
                 className="flex-shrink-0 px-3 py-1 rounded-full text-xs font-semibold transition-all whitespace-nowrap"
                 style={{
                   background: activeTag === null ? brand : "transparent",
-                  color: activeTag === null ? "#fff" : "#52525b",
-                  border: `1px solid ${activeTag === null ? brand : "#2a2a2d"}`,
+                  color: activeTag === null ? "#fff" : "#6b7280",
+                  border: `1px solid ${activeTag === null ? brand : "#2e3140"}`,
                 }}>
                 {lang === "en" ? "All" : "Todos"}
               </button>
@@ -275,8 +275,8 @@ export default function MenuPageClient({
                   className="flex-shrink-0 px-3 py-1 rounded-full text-xs font-semibold transition-all whitespace-nowrap"
                   style={{
                     background: activeTag === tag ? brand : "transparent",
-                    color: activeTag === tag ? "#fff" : "#52525b",
-                    border: `1px solid ${activeTag === tag ? brand : "#2a2a2d"}`,
+                    color: activeTag === tag ? "#fff" : "#6b7280",
+                    border: `1px solid ${activeTag === tag ? brand : "#2e3140"}`,
                   }}>
                   {tag}
                 </button>
@@ -293,13 +293,13 @@ export default function MenuPageClient({
           {!hasPlan ? (
             <div className="py-24 text-center space-y-4">
               <div className="w-20 h-20 mx-auto rounded-full flex items-center justify-center"
-                style={{ background: "#1c1c1f" }}>
-                <UtensilsCrossed size={32} style={{ color: "#3f3f46" }} />
+                style={{ background: "#252830" }}>
+                <UtensilsCrossed size={32} style={{ color: "#3a3f52" }} />
               </div>
-              <p className="font-semibold text-lg" style={{ color: "#a1a1aa" }}>
+              <p className="font-semibold text-lg" style={{ color: "#9ca3af" }}>
                 {lang === "en" ? "Menu not available" : "Cardápio não disponível"}
               </p>
-              <p className="text-sm max-w-xs mx-auto" style={{ color: "#52525b" }}>
+              <p className="text-sm max-w-xs mx-auto" style={{ color: "#6b7280" }}>
                 {lang === "en"
                   ? "The restaurant hasn't published their menu yet."
                   : "O restaurante ainda não publicou o cardápio."}
@@ -308,10 +308,10 @@ export default function MenuPageClient({
           ) : filtered.length === 0 ? (
             <div className="py-24 text-center space-y-3">
               <div className="w-20 h-20 mx-auto rounded-full flex items-center justify-center"
-                style={{ background: "#1c1c1f" }}>
-                <Search size={28} style={{ color: "#3f3f46" }} />
+                style={{ background: "#252830" }}>
+                <Search size={28} style={{ color: "#3a3f52" }} />
               </div>
-              <p className="font-semibold" style={{ color: "#a1a1aa" }}>
+              <p className="font-semibold" style={{ color: "#9ca3af" }}>
                 {lang === "en" ? "No dishes found" : "Nenhum prato encontrado"}
               </p>
               <button onClick={() => { setSearch(""); setActiveTag(null); }}
@@ -330,9 +330,9 @@ export default function MenuPageClient({
                 <div className="flex items-center gap-3 mb-5">
                   <div className="w-1 h-6 rounded-full flex-shrink-0" style={{ background: brand }} />
                   <h2 className="text-lg font-black tracking-tight" style={{ color: "#fafafa" }}>{cat.name}</h2>
-                  <div className="flex-1 h-px" style={{ background: "linear-gradient(to right, #27272a, transparent)" }} />
+                  <div className="flex-1 h-px" style={{ background: "linear-gradient(to right, #2e3140, transparent)" }} />
                   <span className="text-xs font-medium px-2 py-0.5 rounded-full"
-                    style={{ background: "#1c1c1f", color: "#52525b", border: "1px solid #27272a" }}>
+                    style={{ background: "#252830", color: "#6b7280", border: "1px solid #2e3140" }}>
                     {cat.items.length}
                   </span>
                 </div>
@@ -345,8 +345,8 @@ export default function MenuPageClient({
                       <div key={item.id}
                         className="group relative rounded-2xl overflow-hidden transition-all duration-200"
                         style={{
-                          background: "#141416",
-                          border: `1px solid ${soldOut ? "#27272a" : "#222224"}`,
+                          background: "#1e2028",
+                          border: `1px solid ${soldOut ? "#2e3140" : "#2e3140"}`,
                           opacity: soldOut ? 0.6 : 1,
                         }}>
 
@@ -358,14 +358,14 @@ export default function MenuPageClient({
                               style={{ filter: soldOut ? "grayscale(100%)" : "none" }} />
                             {/* gradient overlay */}
                             <div className="absolute inset-0"
-                              style={{ background: "linear-gradient(to top, rgba(20,20,22,0.8) 0%, transparent 60%)" }} />
+                              style={{ background: "linear-gradient(to top, rgba(30,32,40,0.8) 0%, transparent 60%)" }} />
                             {/* price badge on image */}
                             {item.price != null && (
                               <div className="absolute bottom-3 right-3">
                                 <span className="text-sm font-black px-2.5 py-1 rounded-xl"
                                   style={{
-                                    background: soldOut ? "#27272a" : brand,
-                                    color: soldOut ? "#71717a" : "#fff",
+                                    background: soldOut ? "#2e3140" : brand,
+                                    color: soldOut ? "#8b92a5" : "#fff",
                                     textDecoration: soldOut ? "line-through" : "none",
                                     boxShadow: soldOut ? "none" : `0 4px 12px ${hexAlpha(brand, 0.5)}`,
                                   }}>
@@ -377,7 +377,7 @@ export default function MenuPageClient({
                             {soldOut && (
                               <div className="absolute top-3 left-3">
                                 <span className="text-xs font-bold px-2.5 py-1 rounded-lg"
-                                  style={{ background: "rgba(0,0,0,0.75)", color: "#a1a1aa", border: "1px solid #3f3f46" }}>
+                                  style={{ background: "rgba(0,0,0,0.75)", color: "#9ca3af", border: "1px solid #3a3f52" }}>
                                   {lang === "en" ? "SOLD OUT" : "ESGOTADO"}
                                 </span>
                               </div>
@@ -386,7 +386,7 @@ export default function MenuPageClient({
                         ) : (
                           /* No image: elegant placeholder with gradient */
                           <div className="h-20 flex items-center justify-center relative overflow-hidden"
-                            style={{ background: `linear-gradient(135deg, #18181b 0%, ${hexAlpha(brand, 0.08)} 100%)` }}>
+                            style={{ background: `linear-gradient(135deg, #1e2028 0%, ${hexAlpha(brand, 0.08)} 100%)` }}>
                             <UtensilsCrossed size={22} style={{ color: hexAlpha(brand, 0.25) }} />
                           </div>
                         )}
@@ -397,13 +397,13 @@ export default function MenuPageClient({
                             <div className="flex-1 min-w-0">
                               <p className="font-bold text-sm leading-snug"
                                 style={{
-                                  color: soldOut ? "#52525b" : "#fafafa",
+                                  color: soldOut ? "#6b7280" : "#fafafa",
                                   textDecoration: soldOut ? "line-through" : "none",
                                 }}>
                                 {item.name}
                               </p>
                               {item.description && (
-                                <p className="text-xs mt-1 leading-relaxed line-clamp-2" style={{ color: "#52525b" }}>
+                                <p className="text-xs mt-1 leading-relaxed line-clamp-2" style={{ color: "#6b7280" }}>
                                   {item.description}
                                 </p>
                               )}
@@ -417,7 +417,7 @@ export default function MenuPageClient({
                             {!item.imageUrl && item.price != null && (
                               <p className="text-base font-black flex-shrink-0 ml-2"
                                 style={{
-                                  color: soldOut ? "#3f3f46" : brand,
+                                  color: soldOut ? "#3a3f52" : brand,
                                   textDecoration: soldOut ? "line-through" : "none",
                                 }}>
                                 {formatPrice(item.price)}
@@ -429,7 +429,7 @@ export default function MenuPageClient({
                           {soldOut && !item.imageUrl && (
                             <div className="mt-2">
                               <span className="text-xs font-semibold px-2 py-0.5 rounded-md"
-                                style={{ background: "#1c1c1f", color: "#52525b", border: "1px solid #27272a" }}>
+                                style={{ background: "#252830", color: "#6b7280", border: "1px solid #2e3140" }}>
                                 {lang === "en" ? "Sold out" : "Esgotado"}
                               </span>
                             </div>
@@ -447,13 +447,13 @@ export default function MenuPageClient({
           {hasPlan && (
             <div className="pt-4 pb-10 space-y-4">
               <div className="rounded-2xl overflow-hidden"
-                style={{ background: `linear-gradient(135deg, #141416 0%, ${hexAlpha(brand, 0.15)} 100%)`, border: `1px solid ${hexAlpha(brand, 0.25)}` }}>
+                style={{ background: `linear-gradient(135deg, #1e2028 0%, ${hexAlpha(brand, 0.15)} 100%)`, border: `1px solid ${hexAlpha(brand, 0.25)}` }}>
                 <div className="px-6 py-6 flex flex-col sm:flex-row items-center gap-4">
                   <div className="flex-1 text-center sm:text-left">
                     <p className="font-black text-base" style={{ color: "#fafafa" }}>
                       {lang === "en" ? "Ready to visit?" : "Pronto para visitar?"}
                     </p>
-                    <p className="text-sm mt-0.5" style={{ color: "#71717a" }}>
+                    <p className="text-sm mt-0.5" style={{ color: "#8b92a5" }}>
                       {lang === "en"
                         ? "Book your table now and guarantee your spot."
                         : "Reserve sua mesa agora e garanta seu lugar."}
@@ -468,8 +468,8 @@ export default function MenuPageClient({
                 </div>
               </div>
 
-              <p className="text-center text-xs" style={{ color: "#27272a" }}>
-                Powered by <span style={{ color: "#3f3f46" }}>Réservé</span>
+              <p className="text-center text-xs" style={{ color: "#2e3140" }}>
+                Powered by <span style={{ color: "#3a3f52" }}>Réservé</span>
               </p>
             </div>
           )}
