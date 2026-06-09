@@ -57,12 +57,24 @@ export default function WidgetClient({ restaurant }: { restaurant: Restaurant })
   const [notes,        setNotes]        = useState("");
   const [occasion,     setOccasion]     = useState("");
   const [loading,      setLoading]      = useState(false);
+  const [loggedIn,     setLoggedIn]     = useState(false);
   // Use fixed initial date to avoid SSR/client mismatch — updated after mount
   const [calMonth,     setCalMonth]     = useState(() => new Date(new Date().getFullYear(), new Date().getMonth(), 1));
   const [now,          setNow]          = useState<Date | null>(null);
 
   // Only run date logic on client to avoid hydration mismatch
   useEffect(() => { setNow(new Date()); }, []);
+
+  // Pre-fill fields if customer is already logged in on the portal
+  useEffect(() => {
+    fetch("/api/cliente/perfil")
+      .then(r => r.ok ? r.json() : null)
+      .then(data => {
+        if (data?.name) { setName(data.name); setLoggedIn(true); }
+        if (data?.phone) setPhone(data.phone);
+      })
+      .catch(() => {});
+  }, []);
 
   const today      = now ?? new Date(0); // epoch as safe SSR default
   const todayStr   = now ? now.toISOString().split("T")[0] : "9999-12-31"; // future date = no filtering on SSR
@@ -391,6 +403,12 @@ export default function WidgetClient({ restaurant }: { restaurant: Restaurant })
                     <h2 className="text-xl font-bold tracking-tight" style={{color:C.fg}}>{t("yourDetails")}</h2>
                     <p className="text-sm mt-1" style={{color:C.muted}}>{t("toConfirmReservation")}</p>
                   </div>
+                  {loggedIn && (
+                    <div className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm border"
+                      style={{background:"#f0fdf4",borderColor:"#86efac",color:"#166534"}}>
+                      <Check size={14}/> Dados preenchidos pela sua conta
+                    </div>
+                  )}
                   <div className="flex items-center gap-3 px-4 py-3 rounded-xl text-sm border"
                     style={{background:C.goldL,borderColor:C.goldB}}>
                     <CalendarDays size={14} style={{color:C.gold}}/><span style={{color:C.fg}}>{fmtDate(selectedDate,lang).dayName}, {fmtDate(selectedDate,lang).day} {lang==="en"?"of":""} {fmtDate(selectedDate,lang).month}</span>
