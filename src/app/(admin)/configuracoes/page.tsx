@@ -75,6 +75,7 @@ export default function ConfiguracoesPage() {
   const [primaryColor, setPrimaryColor] = useState("#f07316");
   const [logoUrl, setLogoUrl] = useState("");
   const [coverUrl, setCoverUrl] = useState("");
+  const [logoShape, setLogoShape] = useState("rounded");
   const [loadingGeral, setLoadingGeral] = useState(false);
 
   // Horários
@@ -109,6 +110,7 @@ export default function ConfiguracoesPage() {
           setPrimaryColor(data.primaryColor ?? "#f07316");
           setLogoUrl(data.logoUrl ?? "");
           setCoverUrl(data.coverUrl ?? "");
+          setLogoShape(data.logoShape ?? "rounded");
         }
       })
       .catch(() => {})
@@ -154,7 +156,7 @@ export default function ConfiguracoesPage() {
       const res = await fetch(`/api/restaurants/${restaurantId}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name, phone, email, address, primaryColor, logoUrl, coverUrl }),
+        body: JSON.stringify({ name, phone, email, address, primaryColor, logoUrl, coverUrl, logoShape }),
       });
       if (res.ok) {
         setSaveState("success");
@@ -388,7 +390,7 @@ export default function ConfiguracoesPage() {
                           Usada no cardápio digital e widget público
                         </p>
                       </div>
-                      <div>
+                      <div className="space-y-3">
                         <ImageUpload
                           label="Logotipo"
                           value={logoUrl}
@@ -397,6 +399,43 @@ export default function ConfiguracoesPage() {
                           aspectRatio="wide"
                           hint="JPG, PNG, SVG — máx. 5MB"
                         />
+                        {/* Logo shape selector */}
+                        <div>
+                          <label className="block text-xs font-semibold mb-2 uppercase tracking-wide" style={{ color: "var(--foreground-muted)" }}>
+                            Formato do logo no cardápio
+                          </label>
+                          <div className="flex gap-2 flex-wrap">
+                            {[
+                              { value: "circle",    label: "Círculo",    preview: "50%" },
+                              { value: "rounded",   label: "Arredondado", preview: "18px" },
+                              { value: "square",    label: "Quadrado",   preview: "4px" },
+                              { value: "rectangle", label: "Retângulo",  preview: "12px" },
+                            ].map(opt => (
+                              <button
+                                key={opt.value}
+                                type="button"
+                                onClick={() => setLogoShape(opt.value)}
+                                className="flex flex-col items-center gap-1.5 p-2.5 rounded-xl border transition-all"
+                                style={{
+                                  borderColor: logoShape === opt.value ? "var(--primary)" : "var(--border)",
+                                  background: logoShape === opt.value ? "var(--primary-light)" : "var(--surface)",
+                                  minWidth: 72,
+                                }}>
+                                {/* Preview shape */}
+                                <div style={{
+                                  width: opt.value === "rectangle" ? 52 : 32,
+                                  height: 32,
+                                  borderRadius: opt.preview,
+                                  background: logoShape === opt.value ? "var(--primary)" : "var(--border)",
+                                  transition: "all 0.15s",
+                                }} />
+                                <span className="text-xs font-medium" style={{ color: logoShape === opt.value ? "var(--primary)" : "var(--foreground-muted)" }}>
+                                  {opt.label}
+                                </span>
+                              </button>
+                            ))}
+                          </div>
+                        </div>
                       </div>
                       <div>
                         <ImageUpload

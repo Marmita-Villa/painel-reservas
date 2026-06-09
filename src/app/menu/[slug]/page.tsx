@@ -27,7 +27,7 @@ export default async function MenuPage({ params }: { params: Promise<{ slug: str
     where: { slug },
     select: {
       id: true, name: true, slug: true,
-      address: true, phone: true, logoUrl: true, coverUrl: true,
+      address: true, phone: true, logoUrl: true, coverUrl: true, logoShape: true,
       plan: true, primaryColor: true,
     },
   });

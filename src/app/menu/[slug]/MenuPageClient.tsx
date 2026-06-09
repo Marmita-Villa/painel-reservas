@@ -14,7 +14,21 @@ interface MenuCategory { id: string; name: string; description?: string | null; 
 interface Restaurant {
   name: string; slug: string; address?: string | null;
   phone?: string | null; logoUrl?: string | null; coverUrl?: string | null;
-  plan: string; primaryColor?: string | null;
+  logoShape?: string | null; plan: string; primaryColor?: string | null;
+}
+
+function getLogoRadius(shape: string | null | undefined): string {
+  switch (shape) {
+    case "circle":    return "50%";
+    case "square":    return "6px";
+    case "rectangle": return "12px";
+    default:          return "20px"; // rounded
+  }
+}
+function getLogoSize(shape: string | null | undefined): { width: number | string; height: number } {
+  return shape === "rectangle"
+    ? { width: "auto", height: 100 }  // retângulo: altura fixa, largura livre
+    : { width: 112, height: 112 };    // demais: quadrado grande
 }
 
 function formatPrice(p: number) {
@@ -268,15 +282,23 @@ export default function MenuPageClient({
 
               {/* Logo */}
               <div style={{
-                width: 96, height: 96, borderRadius: "1.5rem", overflow: "hidden",
+                ...getLogoSize(restaurant.logoShape),
+                maxWidth: restaurant.logoShape === "rectangle" ? 260 : 112,
+                borderRadius: getLogoRadius(restaurant.logoShape),
+                overflow: "hidden",
                 display: "flex", alignItems: "center", justifyContent: "center",
-                background: restaurant.logoUrl ? "transparent" : brand,
-                boxShadow: `0 12px 40px ${hexAlpha(brand, 0.35)}, 0 0 0 4px ${hexAlpha(brand, 0.15)}`,
-                flexShrink: 0,
+                background: restaurant.logoUrl ? (theme === "dark" ? "rgba(255,255,255,0.06)" : "rgba(255,255,255,0.9)") : brand,
+                boxShadow: `0 16px 48px ${hexAlpha(brand, 0.4)}, 0 0 0 5px ${hexAlpha(brand, 0.18)}`,
+                flexShrink: 0, padding: restaurant.logoUrl ? 6 : 0,
               }}>
                 {restaurant.logoUrl
-                  ? <img src={restaurant.logoUrl} alt={restaurant.name} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
-                  : <span style={{ fontSize: "2.5rem", fontWeight: 900, color: "#fff" }}>{restaurant.name[0]}</span>}
+                  ? <img src={restaurant.logoUrl} alt={restaurant.name} style={{
+                      maxWidth: "100%", maxHeight: "100%",
+                      width: restaurant.logoShape === "rectangle" ? "auto" : "100%",
+                      height: "100%", objectFit: "contain",
+                      borderRadius: getLogoRadius(restaurant.logoShape),
+                    }} />
+                  : <span style={{ fontSize: "3rem", fontWeight: 900, color: "#fff" }}>{restaurant.name[0]}</span>}
               </div>
 
               {/* Restaurant name */}
