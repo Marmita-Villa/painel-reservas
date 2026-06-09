@@ -210,7 +210,7 @@ export default function MenuPageClient({
             background: hexAlpha(brand, theme === "dark" ? 0.08 : 0.05), filter: "blur(50px)",
           }} />
 
-          <div style={{ maxWidth: 720, margin: "0 auto", padding: "2.5rem 1.25rem 2rem", position: "relative", zIndex: 1 }}>
+          <div style={{ maxWidth: 1080, margin: "0 auto", padding: "2.5rem 1.25rem 2rem", position: "relative", zIndex: 1 }}>
 
             {/* Top bar: lang + theme toggle */}
             <div style={{ display: "flex", justifyContent: "flex-end", gap: "0.5rem", marginBottom: "1.75rem" }}>
@@ -308,7 +308,7 @@ export default function MenuPageClient({
       }}>
 
         {/* Search bar */}
-        <div style={{ maxWidth: 720, margin: "0 auto", padding: "0.75rem 1rem 0.5rem" }}>
+        <div style={{ maxWidth: 1080, margin: "0 auto", padding: "0.75rem 1rem 0.5rem" }}>
           <div style={{ position: "relative" }}>
             <Search size={15} style={{ position: "absolute", left: "0.875rem", top: "50%", transform: "translateY(-50%)", color: C.placeholder }} />
             <input
@@ -334,7 +334,7 @@ export default function MenuPageClient({
 
         {/* Category tabs */}
         {!search && (
-          <div style={{ maxWidth: 720, margin: "0 auto" }}>
+          <div style={{ maxWidth: 1080, margin: "0 auto" }}>
             <div style={{ display: "flex", gap: "0.375rem", overflowX: "auto", padding: "0 1rem 0.75rem", scrollbarWidth: "none" }}>
               {categories.map(cat => {
                 const isActive = activeCategory === cat.id;
@@ -360,7 +360,7 @@ export default function MenuPageClient({
 
         {/* Tag filters */}
         {allTags.length > 0 && !search && (
-          <div style={{ maxWidth: 720, margin: "0 auto", borderTop: `1px solid ${C.divider}` }}>
+          <div style={{ maxWidth: 1080, margin: "0 auto", borderTop: `1px solid ${C.divider}` }}>
             <div style={{ display: "flex", gap: "0.375rem", overflowX: "auto", padding: "0.5rem 1rem 0.625rem", scrollbarWidth: "none", alignItems: "center" }}>
               <span style={{ fontSize: "0.7rem", fontWeight: 700, color: C.textDim, flexShrink: 0, textTransform: "uppercase", letterSpacing: "0.05em" }}>
                 {lang === "en" ? "Filter" : "Filtrar"}
@@ -387,7 +387,7 @@ export default function MenuPageClient({
       </header>
 
       {/* ── CONTENT ── */}
-      <main style={{ maxWidth: 720, margin: "0 auto", padding: "1.5rem 1rem 4rem" }}>
+      <main style={{ maxWidth: 1080, margin: "0 auto", padding: "1.5rem 1rem 4rem" }}>
 
         {!hasPlan ? (
           <div style={{ padding: "5rem 0", textAlign: "center" }}>
@@ -441,7 +441,7 @@ export default function MenuPageClient({
                 </div>
 
                 {/* Items grid */}
-                <div style={{ display: "grid", gap: "0.875rem", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))" }}>
+                <div className="menu-grid" style={{ display: "grid", gap: "0.875rem" }}>
                   {cat.items.map(item => {
                     const soldOut = item.isSoldOut === true;
                     return (
