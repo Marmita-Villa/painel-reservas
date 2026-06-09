@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
-import { MapPin, Phone, CalendarDays, Search, X, ChevronUp, UtensilsCrossed, Clock, Star } from "lucide-react";
+import { MapPin, Phone, CalendarDays, Search, X, ChevronUp, UtensilsCrossed, Sun, Moon } from "lucide-react";
 import { useTranslation } from "@/hooks/useTranslation";
 import LangToggle from "@/components/LangToggle";
 
@@ -21,33 +21,91 @@ function formatPrice(p: number) {
   return `R$ ${p.toFixed(2).replace(".", ",")}`;
 }
 
-const TAG_COLORS: Record<string, { bg: string; color: string }> = {
-  "Vegetariano 🥦": { bg: "#dcfce7", color: "#16a34a" },
-  "Vegan 🌱":        { bg: "#d1fae5", color: "#059669" },
-  "Vegano 🌱":       { bg: "#d1fae5", color: "#059669" },
-  "Sem glúten 🌾":   { bg: "#fef9c3", color: "#ca8a04" },
-  "Sem lactose 🥛":  { bg: "#e0f2fe", color: "#0284c7" },
-  "Picante 🌶️":      { bg: "#fee2e2", color: "#dc2626" },
-  "Novidade ✨":     { bg: "#ede9fe", color: "#7c3aed" },
-  "Mais pedido ⭐":  { bg: "#fff7ed", color: "#ea580c" },
+// ── Colour palettes ─────────────────────────────────────────────────────────
+const DARK = {
+  bg:         "#1a1d27",
+  card:       "#242736",
+  surface:    "#2d3144",
+  border:     "#323649",
+  border2:    "#3d4260",
+  text:       "#eef0ff",
+  textMuted:  "#9ba3c4",
+  textDim:    "#5c6489",
+  header:     "rgba(26,29,39,0.97)",
+  inputBg:    "#2d3144",
+  placeholder:"#5c6489",
+  divider:    "rgba(255,255,255,0.06)",
+};
+const LIGHT = {
+  bg:         "#f4f6fc",
+  card:       "#ffffff",
+  surface:    "#eef0f8",
+  border:     "#dde1f0",
+  border2:    "#c8cee6",
+  text:       "#111827",
+  textMuted:  "#374151",
+  textDim:    "#9ca3af",
+  header:     "rgba(244,246,252,0.97)",
+  inputBg:    "#ffffff",
+  placeholder:"#9ca3af",
+  divider:    "rgba(0,0,0,0.06)",
 };
 
-function TagBadge({ tag }: { tag: string }) {
-  const style = TAG_COLORS[tag] ?? { bg: "#f4f4f5", color: "#8b92a5" };
-  return (
-    <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium"
-      style={{ background: style.bg, color: style.color }}>
-      {tag}
-    </span>
-  );
+// ── Category & Tag translations ──────────────────────────────────────────────
+const CAT_EN: Record<string, string> = {
+  "Entradas": "Starters", "Massas": "Pasta", "Pratos Principais": "Main Courses",
+  "Pizzas": "Pizzas", "Sobremesas": "Desserts", "Bebidas": "Beverages",
+  "Petiscos": "Snacks", "Saladas": "Salads", "Lanches": "Sandwiches",
+  "Sucos": "Juices", "Cervejas": "Beers", "Vinhos": "Wines",
+  "Drinks": "Cocktails", "Frutos do Mar": "Seafood", "Carnes": "Meats",
+  "Aves": "Poultry", "Peixes": "Fish", "Risotos": "Risottos",
+  "Sopas": "Soups", "Infantil": "Kids Menu", "Vegano": "Vegan",
+  "Vegetariano": "Vegetarian", "Grelhados": "Grilled", "Combos": "Combos",
+  "Promoções": "Specials", "Especiais": "Specials", "Porções": "Portions",
+  "Acompanhamentos": "Sides", "Doces": "Sweets", "Salgados": "Savory",
+};
+
+const TAG_EN: Record<string, string> = {
+  "Vegetariano 🥦": "Vegetarian 🥦",
+  "Vegan 🌱": "Vegan 🌱",
+  "Vegano 🌱": "Vegan 🌱",
+  "Sem glúten 🌾": "Gluten-free 🌾",
+  "Sem lactose 🥛": "Lactose-free 🥛",
+  "Picante 🌶️": "Spicy 🌶️",
+  "Novidade ✨": "New ✨",
+  "Mais pedido ⭐": "Best seller ⭐",
+};
+
+function catName(name: string, lang: "pt" | "en") {
+  return lang === "en" ? (CAT_EN[name] ?? name) : name;
+}
+function tagName(tag: string, lang: "pt" | "en") {
+  return lang === "en" ? (TAG_EN[tag] ?? tag) : tag;
 }
 
-// Hex → rgba helper for transparent overlays
+// ── Tag badge colours ────────────────────────────────────────────────────────
+const TAG_COLORS: Record<string, { bg: string; color: string }> = {
+  "Vegetariano 🥦": { bg: "#dcfce7", color: "#15803d" },
+  "Vegan 🌱":       { bg: "#d1fae5", color: "#047857" },
+  "Vegano 🌱":      { bg: "#d1fae5", color: "#047857" },
+  "Sem glúten 🌾":  { bg: "#fef9c3", color: "#a16207" },
+  "Sem lactose 🥛": { bg: "#e0f2fe", color: "#0369a1" },
+  "Picante 🌶️":     { bg: "#fee2e2", color: "#b91c1c" },
+  "Novidade ✨":    { bg: "#ede9fe", color: "#6d28d9" },
+  "Mais pedido ⭐": { bg: "#fff7ed", color: "#c2410c" },
+};
+
 function hexAlpha(hex: string, alpha: number) {
   const r = parseInt(hex.slice(1, 3), 16);
   const g = parseInt(hex.slice(3, 5), 16);
   const b = parseInt(hex.slice(5, 7), 16);
   return `rgba(${r},${g},${b},${alpha})`;
+}
+
+// ── Auto-detect day/night ────────────────────────────────────────────────────
+function getAutoTheme(): "light" | "dark" {
+  const h = new Date().getHours();
+  return h >= 6 && h < 19 ? "light" : "dark";
 }
 
 export default function MenuPageClient({
@@ -60,23 +118,29 @@ export default function MenuPageClient({
   const { lang, setLang } = useTranslation();
   const brand = restaurant.primaryColor ?? "#f07316";
 
-  const [search, setSearch] = useState("");
+  const [search,         setSearch]         = useState("");
   const [activeCategory, setActiveCategory] = useState(categories[0]?.id ?? "");
-  const [activeTag, setActiveTag] = useState<string | null>(null);
-  const [showBackToTop, setShowBackToTop] = useState(false);
+  const [activeTag,      setActiveTag]      = useState<string | null>(null);
+  const [showBackToTop,  setShowBackToTop]  = useState(false);
   const [headerScrolled, setHeaderScrolled] = useState(false);
+  const [theme,          setTheme]          = useState<"light" | "dark">("light"); // SSR-safe
   const categoryRefs = useRef<Record<string, HTMLElement | null>>({});
   const scrollingRef = useRef(false);
 
-  const allTags = Array.from(new Set(categories.flatMap(c => c.items.flatMap(i => i.tags))));
+  // Set theme on client (auto by time, then respect manual toggle)
+  useEffect(() => { setTheme(getAutoTheme()); }, []);
+
+  const C = theme === "dark" ? DARK : LIGHT;
+  const allTags    = Array.from(new Set(categories.flatMap(c => c.items.flatMap(i => i.tags))));
   const totalItems = categories.reduce((acc, c) => acc + c.items.length, 0);
 
   const filtered = categories.map(cat => ({
     ...cat,
     items: cat.items.filter(item => {
-      const matchSearch = !search.trim() || search.trim().length < 2 ||
-        item.name.toLowerCase().includes(search.toLowerCase()) ||
-        item.description?.toLowerCase().includes(search.toLowerCase());
+      const q = search.trim().toLowerCase();
+      const matchSearch = !q || q.length < 2 ||
+        item.name.toLowerCase().includes(q) ||
+        item.description?.toLowerCase().includes(q);
       const matchTag = !activeTag || item.tags.includes(activeTag);
       return matchSearch && matchTag;
     }),
@@ -103,13 +167,11 @@ export default function MenuPageClient({
     return () => window.removeEventListener("scroll", handler);
   }, []);
 
-  // IntersectionObserver to track active category while scrolling
   useEffect(() => {
     if (categories.length === 0) return;
     const obs = new IntersectionObserver(
       (entries) => {
         if (scrollingRef.current) return;
-        // pick the topmost visible section
         const visible = entries
           .filter(e => e.isIntersecting)
           .sort((a, b) => a.boundingClientRect.top - b.boundingClientRect.top);
@@ -128,360 +190,421 @@ export default function MenuPageClient({
   }, [categories]);
 
   return (
-    <div className="min-h-screen flex flex-col" style={{ background: "#16181d", color: "#f4f4f5" }}>
+    <div style={{ minHeight: "100vh", background: C.bg, color: C.text, fontFamily: "'Inter', 'Segoe UI', system-ui, sans-serif", transition: "background 0.3s, color 0.3s" }}>
 
       {/* ── HERO ── */}
       {!search && (
-        <div className="relative overflow-hidden"
-          style={{
-            background: `linear-gradient(135deg, #16181d 0%, ${hexAlpha(brand, 0.25)} 60%, ${hexAlpha(brand, 0.45)} 100%)`,
-            borderBottom: `1px solid ${hexAlpha(brand, 0.3)}`,
-          }}>
-          {/* decorative glow */}
-          <div className="absolute -top-20 -right-20 w-72 h-72 rounded-full pointer-events-none"
-            style={{ background: hexAlpha(brand, 0.12), filter: "blur(60px)" }} />
+        <div className="relative overflow-hidden" style={{
+          background: theme === "dark"
+            ? `linear-gradient(160deg, #1a1d27 0%, ${hexAlpha(brand, 0.18)} 50%, ${hexAlpha(brand, 0.32)} 100%)`
+            : `linear-gradient(160deg, #ffffff 0%, ${hexAlpha(brand, 0.06)} 50%, ${hexAlpha(brand, 0.14)} 100%)`,
+          borderBottom: `1px solid ${hexAlpha(brand, theme === "dark" ? 0.25 : 0.15)}`,
+        }}>
+          {/* glow blobs */}
+          <div className="absolute pointer-events-none" style={{
+            top: -60, right: -60, width: 280, height: 280, borderRadius: "50%",
+            background: hexAlpha(brand, theme === "dark" ? 0.14 : 0.08), filter: "blur(70px)",
+          }} />
+          <div className="absolute pointer-events-none" style={{
+            bottom: -40, left: -40, width: 200, height: 200, borderRadius: "50%",
+            background: hexAlpha(brand, theme === "dark" ? 0.08 : 0.05), filter: "blur(50px)",
+          }} />
 
-          <div className="max-w-3xl mx-auto px-5 pt-8 pb-6 relative z-10">
-            <div className="flex items-start gap-4">
-              {/* Logo */}
-              <div className="w-16 h-16 rounded-2xl flex items-center justify-center text-2xl font-bold flex-shrink-0 overflow-hidden shadow-lg"
-                style={{ background: brand, color: "#fff", boxShadow: `0 8px 24px ${hexAlpha(brand, 0.4)}` }}>
-                {restaurant.logoUrl
-                  ? <img src={restaurant.logoUrl} alt={restaurant.name} className="w-full h-full object-cover" />
-                  : restaurant.name[0]}
+          <div style={{ maxWidth: 720, margin: "0 auto", padding: "2.5rem 1.25rem 2rem", position: "relative", zIndex: 1 }}>
+
+            {/* Top bar: lang + theme toggle */}
+            <div style={{ display: "flex", justifyContent: "flex-end", gap: "0.5rem", marginBottom: "1.75rem" }}>
+              <LangToggle lang={lang} setLang={setLang} />
+              <button
+                onClick={() => setTheme(t => t === "dark" ? "light" : "dark")}
+                title={theme === "dark" ? "Modo claro" : "Modo escuro"}
+                style={{
+                  display: "flex", alignItems: "center", gap: "0.375rem",
+                  padding: "0.375rem 0.75rem", borderRadius: "999px", fontSize: "0.75rem",
+                  background: hexAlpha(brand, 0.12), color: brand,
+                  border: `1px solid ${hexAlpha(brand, 0.3)}`, cursor: "pointer", fontWeight: 600,
+                }}>
+                {theme === "dark" ? <Sun size={13} /> : <Moon size={13} />}
+                {theme === "dark" ? (lang === "en" ? "Light" : "Claro") : (lang === "en" ? "Dark" : "Escuro")}
+              </button>
+            </div>
+
+            {/* Logo + info — centrado */}
+            <div style={{ display: "flex", flexDirection: "column", alignItems: "center", textAlign: "center", gap: "1rem" }}>
+
+              {/* Badge "Cardápio Digital" */}
+              <div style={{
+                display: "inline-flex", alignItems: "center", gap: "0.375rem",
+                padding: "0.35rem 1rem", borderRadius: "999px", fontSize: "0.75rem", fontWeight: 700,
+                letterSpacing: "0.04em", textTransform: "uppercase",
+                background: brand, color: "#fff",
+                boxShadow: `0 4px 16px ${hexAlpha(brand, 0.4)}`,
+              }}>
+                <UtensilsCrossed size={12} />
+                {lang === "en" ? "Digital Menu" : "Cardápio Digital"}
               </div>
 
-              <div className="flex-1 min-w-0 pt-0.5">
-                <div className="flex items-center gap-2 mb-1">
-                  <span className="text-xs font-semibold px-2 py-0.5 rounded-full"
-                    style={{ background: hexAlpha(brand, 0.2), color: brand, border: `1px solid ${hexAlpha(brand, 0.4)}` }}>
-                    {lang === "en" ? "Digital Menu" : "Cardápio Digital"}
-                  </span>
-                </div>
-                <h1 className="text-2xl font-black leading-tight" style={{ color: "#fafafa" }}>
+              {/* Logo */}
+              <div style={{
+                width: 96, height: 96, borderRadius: "1.5rem", overflow: "hidden",
+                display: "flex", alignItems: "center", justifyContent: "center",
+                background: restaurant.logoUrl ? "transparent" : brand,
+                boxShadow: `0 12px 40px ${hexAlpha(brand, 0.35)}, 0 0 0 4px ${hexAlpha(brand, 0.15)}`,
+                flexShrink: 0,
+              }}>
+                {restaurant.logoUrl
+                  ? <img src={restaurant.logoUrl} alt={restaurant.name} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                  : <span style={{ fontSize: "2.5rem", fontWeight: 900, color: "#fff" }}>{restaurant.name[0]}</span>}
+              </div>
+
+              {/* Restaurant name */}
+              <div>
+                <h1 style={{ fontSize: "1.875rem", fontWeight: 900, letterSpacing: "-0.03em", color: C.text, lineHeight: 1.1 }}>
                   {restaurant.name}
                 </h1>
-                <div className="flex flex-wrap gap-3 mt-2">
+
+                {/* Info row */}
+                <div style={{ display: "flex", flexWrap: "wrap", justifyContent: "center", gap: "1rem", marginTop: "0.75rem" }}>
                   {restaurant.address && (
-                    <span className="flex items-center gap-1 text-xs" style={{ color: "#9ca3af" }}>
-                      <MapPin size={11} style={{ color: brand }} /> {restaurant.address}
+                    <span style={{ display: "flex", alignItems: "center", gap: "0.375rem", fontSize: "0.8125rem", color: C.textMuted }}>
+                      <MapPin size={13} style={{ color: brand }} /> {restaurant.address}
                     </span>
                   )}
                   {restaurant.phone && (
-                    <span className="flex items-center gap-1 text-xs" style={{ color: "#9ca3af" }}>
-                      <Phone size={11} style={{ color: brand }} /> {restaurant.phone}
-                    </span>
+                    <a href={`tel:${restaurant.phone}`} style={{ display: "flex", alignItems: "center", gap: "0.375rem", fontSize: "0.8125rem", color: C.textMuted, textDecoration: "none" }}>
+                      <Phone size={13} style={{ color: brand }} /> {restaurant.phone}
+                    </a>
                   )}
-                  <span className="flex items-center gap-1 text-xs" style={{ color: "#9ca3af" }}>
-                    <UtensilsCrossed size={11} style={{ color: brand }} />
+                  <span style={{ display: "flex", alignItems: "center", gap: "0.375rem", fontSize: "0.8125rem", color: C.textMuted }}>
+                    <UtensilsCrossed size={13} style={{ color: brand }} />
                     {totalItems} {lang === "en" ? "items" : "itens"} · {categories.length} {lang === "en" ? "categories" : "categorias"}
                   </span>
                 </div>
               </div>
 
-              <div className="flex flex-col items-end gap-2 flex-shrink-0">
-                <LangToggle lang={lang} setLang={setLang} />
-                <a href={`/r/${restaurant.slug}`}
-                  className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold transition-all hover:opacity-90 whitespace-nowrap"
-                  style={{ background: brand, color: "#fff", boxShadow: `0 4px 16px ${hexAlpha(brand, 0.4)}` }}>
-                  <CalendarDays size={12} />
-                  {lang === "en" ? "Reserve a table" : "Fazer reserva"}
-                </a>
-              </div>
+              {/* CTA button */}
+              <a href={`/r/${restaurant.slug}`} style={{
+                display: "inline-flex", alignItems: "center", gap: "0.5rem",
+                padding: "0.75rem 1.75rem", borderRadius: "0.875rem",
+                background: brand, color: "#fff", fontWeight: 700, fontSize: "0.9375rem",
+                textDecoration: "none", boxShadow: `0 6px 24px ${hexAlpha(brand, 0.45)}`,
+                transition: "opacity 0.15s",
+              }}>
+                <CalendarDays size={16} />
+                {lang === "en" ? "Reserve a table" : "Fazer uma reserva"}
+              </a>
             </div>
           </div>
         </div>
       )}
 
-      {/* ── STICKY HEADER (search + categories + tag filters) ── */}
-      <header id="sticky-header" className="sticky top-0 z-30 transition-all"
-        style={{
-          background: headerScrolled ? "rgba(12,12,14,0.97)" : "#1e2028",
-          borderBottom: `1px solid ${headerScrolled ? hexAlpha(brand, 0.2) : "#2e3140"}`,
-          backdropFilter: "blur(12px)",
-        }}>
+      {/* ── STICKY HEADER ── */}
+      <header id="sticky-header" style={{
+        position: "sticky", top: 0, zIndex: 30,
+        background: headerScrolled ? C.header : C.bg,
+        borderBottom: `1px solid ${headerScrolled ? hexAlpha(brand, 0.18) : C.border}`,
+        backdropFilter: "blur(16px)",
+        transition: "background 0.2s, border-color 0.2s",
+      }}>
 
-        {/* Search */}
-        <div className="max-w-3xl mx-auto px-4 pt-3 pb-2">
-          <div className="flex items-center gap-2">
-            <div className="relative flex-1">
-              <Search size={14} className="absolute left-3.5 top-1/2 -translate-y-1/2" style={{ color: "#6b7280" }} />
-              <input
-                type="text"
-                value={search}
-                onChange={e => setSearch(e.target.value)}
-                placeholder={lang === "en" ? "Search dishes..." : "Buscar pratos..."}
-                className="w-full pl-9 pr-9 py-2.5 rounded-xl text-sm outline-none"
-                style={{ background: "#252830", border: `1px solid ${search ? brand : "#3a3f52"}`, color: "#fafafa",
-                  boxShadow: search ? `0 0 0 2px ${hexAlpha(brand, 0.15)}` : "none" }}
-              />
-              {search && (
-                <button onClick={() => setSearch("")} className="absolute right-3 top-1/2 -translate-y-1/2">
-                  <X size={14} style={{ color: "#8b92a5" }} />
-                </button>
-              )}
-            </div>
+        {/* Search bar */}
+        <div style={{ maxWidth: 720, margin: "0 auto", padding: "0.75rem 1rem 0.5rem" }}>
+          <div style={{ position: "relative" }}>
+            <Search size={15} style={{ position: "absolute", left: "0.875rem", top: "50%", transform: "translateY(-50%)", color: C.placeholder }} />
+            <input
+              type="text"
+              value={search}
+              onChange={e => setSearch(e.target.value)}
+              placeholder={lang === "en" ? "Search dishes…" : "Buscar pratos…"}
+              style={{
+                width: "100%", paddingLeft: "2.5rem", paddingRight: search ? "2.5rem" : "0.875rem",
+                paddingTop: "0.625rem", paddingBottom: "0.625rem",
+                borderRadius: "0.875rem", fontSize: "0.9rem", outline: "none", boxSizing: "border-box",
+                background: C.inputBg, border: `1.5px solid ${search ? brand : C.border}`,
+                color: C.text, transition: "border-color 0.15s",
+                boxShadow: search ? `0 0 0 3px ${hexAlpha(brand, 0.12)}` : "none",
+              }} />
             {search && (
-              <a href={`/r/${restaurant.slug}`}
-                className="flex-shrink-0 flex items-center gap-1.5 px-3 py-2.5 rounded-xl text-xs font-bold transition-all hover:opacity-80"
-                style={{ background: brand, color: "#fff" }}>
-                <CalendarDays size={12} />
-              </a>
+              <button onClick={() => setSearch("")} style={{ position: "absolute", right: "0.875rem", top: "50%", transform: "translateY(-50%)", background: "none", border: "none", cursor: "pointer", color: C.textDim }}>
+                <X size={15} />
+              </button>
             )}
           </div>
         </div>
 
         {/* Category tabs */}
         {!search && (
-          <div className="max-w-3xl mx-auto">
-            <div className="flex gap-1.5 overflow-x-auto px-4 pb-2.5 scrollbar-hide">
-              {categories.map(cat => (
-                <button key={cat.id} onClick={() => scrollToCategory(cat.id)}
-                  className="flex-shrink-0 flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-semibold transition-all whitespace-nowrap"
-                  style={{
-                    background: activeCategory === cat.id ? brand : "#252830",
-                    color: activeCategory === cat.id ? "#fff" : "#8b92a5",
-                    border: `1px solid ${activeCategory === cat.id ? brand : "#3a3f52"}`,
-                    boxShadow: activeCategory === cat.id ? `0 2px 12px ${hexAlpha(brand, 0.35)}` : "none",
+          <div style={{ maxWidth: 720, margin: "0 auto" }}>
+            <div style={{ display: "flex", gap: "0.375rem", overflowX: "auto", padding: "0 1rem 0.75rem", scrollbarWidth: "none" }}>
+              {categories.map(cat => {
+                const isActive = activeCategory === cat.id;
+                return (
+                  <button key={cat.id} onClick={() => scrollToCategory(cat.id)} style={{
+                    flexShrink: 0, display: "flex", alignItems: "center", gap: "0.375rem",
+                    padding: "0.4rem 0.875rem", borderRadius: "999px",
+                    fontSize: "0.8125rem", fontWeight: isActive ? 700 : 500,
+                    cursor: "pointer", whiteSpace: "nowrap", transition: "all 0.15s",
+                    background: isActive ? brand : C.surface,
+                    color: isActive ? "#fff" : C.textMuted,
+                    border: `1.5px solid ${isActive ? brand : C.border}`,
+                    boxShadow: isActive ? `0 2px 14px ${hexAlpha(brand, 0.35)}` : "none",
                   }}>
-                  {cat.name}
-                  <span className="text-xs opacity-70 font-normal">
-                    {cat.items.length}
-                  </span>
-                </button>
-              ))}
+                    {catName(cat.name, lang)}
+                    <span style={{ fontSize: "0.7rem", opacity: 0.7, fontWeight: 400 }}>{cat.items.length}</span>
+                  </button>
+                );
+              })}
             </div>
           </div>
         )}
 
         {/* Tag filters */}
         {allTags.length > 0 && !search && (
-          <div className="max-w-3xl mx-auto border-t" style={{ borderColor: "#252830" }}>
-            <div className="flex gap-1.5 overflow-x-auto px-4 py-2 scrollbar-hide items-center">
-              <span className="text-xs flex-shrink-0 font-medium" style={{ color: "#3a3f52" }}>
+          <div style={{ maxWidth: 720, margin: "0 auto", borderTop: `1px solid ${C.divider}` }}>
+            <div style={{ display: "flex", gap: "0.375rem", overflowX: "auto", padding: "0.5rem 1rem 0.625rem", scrollbarWidth: "none", alignItems: "center" }}>
+              <span style={{ fontSize: "0.7rem", fontWeight: 700, color: C.textDim, flexShrink: 0, textTransform: "uppercase", letterSpacing: "0.05em" }}>
                 {lang === "en" ? "Filter" : "Filtrar"}
               </span>
-              <button onClick={() => setActiveTag(null)}
-                className="flex-shrink-0 px-3 py-1 rounded-full text-xs font-semibold transition-all whitespace-nowrap"
-                style={{
-                  background: activeTag === null ? brand : "transparent",
-                  color: activeTag === null ? "#fff" : "#6b7280",
-                  border: `1px solid ${activeTag === null ? brand : "#2e3140"}`,
-                }}>
-                {lang === "en" ? "All" : "Todos"}
-              </button>
-              {allTags.map(tag => (
-                <button key={tag} onClick={() => setActiveTag(activeTag === tag ? null : tag)}
-                  className="flex-shrink-0 px-3 py-1 rounded-full text-xs font-semibold transition-all whitespace-nowrap"
-                  style={{
-                    background: activeTag === tag ? brand : "transparent",
-                    color: activeTag === tag ? "#fff" : "#6b7280",
-                    border: `1px solid ${activeTag === tag ? brand : "#2e3140"}`,
+              {[null, ...allTags].map((tag, i) => {
+                const isActive = tag === null ? activeTag === null : activeTag === tag;
+                const label = tag === null ? (lang === "en" ? "All" : "Todos") : tagName(tag, lang);
+                return (
+                  <button key={i} onClick={() => setActiveTag(tag)} style={{
+                    flexShrink: 0, padding: "0.3rem 0.75rem", borderRadius: "999px",
+                    fontSize: "0.75rem", fontWeight: isActive ? 700 : 500, cursor: "pointer",
+                    whiteSpace: "nowrap", transition: "all 0.15s",
+                    background: isActive ? brand : "transparent",
+                    color: isActive ? "#fff" : C.textMuted,
+                    border: `1.5px solid ${isActive ? brand : C.border}`,
                   }}>
-                  {tag}
-                </button>
-              ))}
+                    {label}
+                  </button>
+                );
+              })}
             </div>
           </div>
         )}
       </header>
 
       {/* ── CONTENT ── */}
-      <main id="menu-scroll" className="flex-1 overflow-auto">
-        <div className="max-w-3xl mx-auto px-4 py-6 space-y-12">
+      <main style={{ maxWidth: 720, margin: "0 auto", padding: "1.5rem 1rem 4rem" }}>
 
-          {!hasPlan ? (
-            <div className="py-24 text-center space-y-4">
-              <div className="w-20 h-20 mx-auto rounded-full flex items-center justify-center"
-                style={{ background: "#252830" }}>
-                <UtensilsCrossed size={32} style={{ color: "#3a3f52" }} />
-              </div>
-              <p className="font-semibold text-lg" style={{ color: "#9ca3af" }}>
-                {lang === "en" ? "Menu not available" : "Cardápio não disponível"}
-              </p>
-              <p className="text-sm max-w-xs mx-auto" style={{ color: "#6b7280" }}>
-                {lang === "en"
-                  ? "The restaurant hasn't published their menu yet."
-                  : "O restaurante ainda não publicou o cardápio."}
-              </p>
+        {!hasPlan ? (
+          <div style={{ padding: "5rem 0", textAlign: "center" }}>
+            <div style={{ width: 80, height: 80, borderRadius: "50%", background: C.surface, display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 1.25rem" }}>
+              <UtensilsCrossed size={32} style={{ color: C.textDim }} />
             </div>
-          ) : filtered.length === 0 ? (
-            <div className="py-24 text-center space-y-3">
-              <div className="w-20 h-20 mx-auto rounded-full flex items-center justify-center"
-                style={{ background: "#252830" }}>
-                <Search size={28} style={{ color: "#3a3f52" }} />
-              </div>
-              <p className="font-semibold" style={{ color: "#9ca3af" }}>
-                {lang === "en" ? "No dishes found" : "Nenhum prato encontrado"}
-              </p>
-              <button onClick={() => { setSearch(""); setActiveTag(null); }}
-                className="text-xs px-4 py-2 rounded-full transition-all hover:opacity-80"
-                style={{ background: hexAlpha(brand, 0.15), color: brand, border: `1px solid ${hexAlpha(brand, 0.3)}` }}>
-                {lang === "en" ? "Clear filters" : "Limpar filtros"}
-              </button>
+            <p style={{ fontWeight: 700, fontSize: "1.125rem", color: C.textMuted }}>
+              {lang === "en" ? "Menu not available" : "Cardápio não disponível"}
+            </p>
+            <p style={{ fontSize: "0.875rem", color: C.textDim, marginTop: "0.5rem" }}>
+              {lang === "en" ? "The restaurant hasn't published their menu yet." : "O restaurante ainda não publicou o cardápio."}
+            </p>
+          </div>
+
+        ) : filtered.length === 0 ? (
+          <div style={{ padding: "5rem 0", textAlign: "center" }}>
+            <div style={{ width: 80, height: 80, borderRadius: "50%", background: C.surface, display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 1.25rem" }}>
+              <Search size={28} style={{ color: C.textDim }} />
             </div>
-          ) : (
-            filtered.map(cat => (
+            <p style={{ fontWeight: 700, color: C.textMuted }}>
+              {lang === "en" ? "No dishes found" : "Nenhum prato encontrado"}
+            </p>
+            <button onClick={() => { setSearch(""); setActiveTag(null); }} style={{
+              marginTop: "1rem", padding: "0.5rem 1.25rem", borderRadius: "999px",
+              background: hexAlpha(brand, 0.12), color: brand, border: `1.5px solid ${hexAlpha(brand, 0.3)}`,
+              fontSize: "0.8125rem", fontWeight: 600, cursor: "pointer",
+            }}>
+              {lang === "en" ? "Clear filters" : "Limpar filtros"}
+            </button>
+          </div>
+
+        ) : (
+          <div style={{ display: "flex", flexDirection: "column", gap: "2.5rem" }}>
+            {filtered.map(cat => (
               <section key={cat.id}
                 ref={el => { categoryRefs.current[cat.id] = el; }}
                 data-cat-id={cat.id}>
 
-                {/* Category header */}
-                <div className="flex items-center gap-3 mb-5">
-                  <div className="w-1 h-6 rounded-full flex-shrink-0" style={{ background: brand }} />
-                  <h2 className="text-lg font-black tracking-tight" style={{ color: "#fafafa" }}>{cat.name}</h2>
-                  <div className="flex-1 h-px" style={{ background: "linear-gradient(to right, #2e3140, transparent)" }} />
-                  <span className="text-xs font-medium px-2 py-0.5 rounded-full"
-                    style={{ background: "#252830", color: "#6b7280", border: "1px solid #2e3140" }}>
-                    {cat.items.length}
-                  </span>
+                {/* Category heading */}
+                <div style={{ display: "flex", alignItems: "center", gap: "0.75rem", marginBottom: "1rem" }}>
+                  <div style={{ width: 4, height: 22, borderRadius: 4, background: brand, flexShrink: 0 }} />
+                  <h2 style={{ fontSize: "1.125rem", fontWeight: 800, color: C.text, letterSpacing: "-0.02em" }}>
+                    {catName(cat.name, lang)}
+                  </h2>
+                  <div style={{ flex: 1, height: 1, background: C.divider }} />
+                  <span style={{
+                    fontSize: "0.75rem", fontWeight: 600, padding: "0.2rem 0.625rem",
+                    borderRadius: "999px", background: C.surface, color: C.textDim,
+                    border: `1px solid ${C.border}`,
+                  }}>{cat.items.length}</span>
                 </div>
 
                 {/* Items grid */}
-                <div className="grid gap-3 sm:grid-cols-2">
+                <div style={{ display: "grid", gap: "0.875rem", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))" }}>
                   {cat.items.map(item => {
                     const soldOut = item.isSoldOut === true;
                     return (
-                      <div key={item.id}
-                        className="group relative rounded-2xl overflow-hidden transition-all duration-200"
-                        style={{
-                          background: "#1e2028",
-                          border: `1px solid ${soldOut ? "#2e3140" : "#2e3140"}`,
-                          opacity: soldOut ? 0.6 : 1,
-                        }}>
+                      <div key={item.id} style={{
+                        borderRadius: "1.125rem", overflow: "hidden",
+                        background: C.card, border: `1px solid ${C.border}`,
+                        opacity: soldOut ? 0.65 : 1,
+                        boxShadow: theme === "light" ? "0 1px 6px rgba(0,0,0,0.07)" : "none",
+                        transition: "transform 0.15s, box-shadow 0.15s",
+                      }}
+                        onMouseEnter={e => { (e.currentTarget as HTMLDivElement).style.transform = "translateY(-2px)"; (e.currentTarget as HTMLDivElement).style.boxShadow = theme === "light" ? `0 8px 24px rgba(0,0,0,0.1)` : `0 8px 24px ${hexAlpha(brand, 0.12)}`; }}
+                        onMouseLeave={e => { (e.currentTarget as HTMLDivElement).style.transform = ""; (e.currentTarget as HTMLDivElement).style.boxShadow = theme === "light" ? "0 1px 6px rgba(0,0,0,0.07)" : "none"; }}>
 
-                        {/* Image area */}
+                        {/* Image */}
                         {item.imageUrl ? (
-                          <div className="relative h-44 overflow-hidden">
-                            <img src={item.imageUrl} alt={item.name}
-                              className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
-                              style={{ filter: soldOut ? "grayscale(100%)" : "none" }} />
-                            {/* gradient overlay */}
-                            <div className="absolute inset-0"
-                              style={{ background: "linear-gradient(to top, rgba(30,32,40,0.8) 0%, transparent 60%)" }} />
-                            {/* price badge on image */}
+                          <div style={{ position: "relative", height: 176, overflow: "hidden" }}>
+                            {/* eslint-disable-next-line @next/next/no-img-element */}
+                            <img src={item.imageUrl} alt={item.name} style={{
+                              width: "100%", height: "100%", objectFit: "cover",
+                              filter: soldOut ? "grayscale(80%)" : "none",
+                              transition: "transform 0.3s",
+                            }} />
+                            <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to top, rgba(0,0,0,0.55) 0%, transparent 55%)" }} />
                             {item.price != null && (
-                              <div className="absolute bottom-3 right-3">
-                                <span className="text-sm font-black px-2.5 py-1 rounded-xl"
-                                  style={{
-                                    background: soldOut ? "#2e3140" : brand,
-                                    color: soldOut ? "#8b92a5" : "#fff",
-                                    textDecoration: soldOut ? "line-through" : "none",
-                                    boxShadow: soldOut ? "none" : `0 4px 12px ${hexAlpha(brand, 0.5)}`,
-                                  }}>
+                              <div style={{ position: "absolute", bottom: "0.75rem", right: "0.75rem" }}>
+                                <span style={{
+                                  fontWeight: 800, fontSize: "0.9375rem",
+                                  padding: "0.3rem 0.75rem", borderRadius: "0.625rem",
+                                  background: soldOut ? "rgba(0,0,0,0.7)" : brand,
+                                  color: soldOut ? "#9ca3af" : "#fff",
+                                  textDecoration: soldOut ? "line-through" : "none",
+                                  boxShadow: soldOut ? "none" : `0 4px 14px ${hexAlpha(brand, 0.55)}`,
+                                }}>
                                   {formatPrice(item.price)}
                                 </span>
                               </div>
                             )}
-                            {/* sold out ribbon */}
                             {soldOut && (
-                              <div className="absolute top-3 left-3">
-                                <span className="text-xs font-bold px-2.5 py-1 rounded-lg"
-                                  style={{ background: "rgba(0,0,0,0.75)", color: "#9ca3af", border: "1px solid #3a3f52" }}>
-                                  {lang === "en" ? "SOLD OUT" : "ESGOTADO"}
+                              <div style={{ position: "absolute", top: "0.75rem", left: "0.75rem" }}>
+                                <span style={{
+                                  fontSize: "0.7rem", fontWeight: 700, padding: "0.25rem 0.625rem",
+                                  borderRadius: "0.375rem", background: "rgba(0,0,0,0.72)",
+                                  color: "#d1d5db", border: "1px solid rgba(255,255,255,0.15)",
+                                  textTransform: "uppercase", letterSpacing: "0.05em",
+                                }}>
+                                  {lang === "en" ? "Sold out" : "Esgotado"}
                                 </span>
                               </div>
                             )}
                           </div>
                         ) : (
-                          /* No image: elegant placeholder with gradient */
-                          <div className="h-20 flex items-center justify-center relative overflow-hidden"
-                            style={{ background: `linear-gradient(135deg, #1e2028 0%, ${hexAlpha(brand, 0.08)} 100%)` }}>
-                            <UtensilsCrossed size={22} style={{ color: hexAlpha(brand, 0.25) }} />
+                          <div style={{
+                            height: 64, display: "flex", alignItems: "center", justifyContent: "center",
+                            background: `linear-gradient(135deg, ${C.surface} 0%, ${hexAlpha(brand, 0.07)} 100%)`,
+                          }}>
+                            <UtensilsCrossed size={20} style={{ color: hexAlpha(brand, 0.3) }} />
                           </div>
                         )}
 
                         {/* Content */}
-                        <div className="p-4">
-                          <div className="flex items-start justify-between gap-2">
-                            <div className="flex-1 min-w-0">
-                              <p className="font-bold text-sm leading-snug"
-                                style={{
-                                  color: soldOut ? "#6b7280" : "#fafafa",
-                                  textDecoration: soldOut ? "line-through" : "none",
-                                }}>
+                        <div style={{ padding: "0.875rem 1rem 1rem" }}>
+                          <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: "0.5rem" }}>
+                            <div style={{ flex: 1, minWidth: 0 }}>
+                              <p style={{
+                                fontWeight: 700, fontSize: "0.9375rem", lineHeight: 1.3,
+                                color: soldOut ? C.textDim : C.text,
+                                textDecoration: soldOut ? "line-through" : "none",
+                              }}>
                                 {item.name}
                               </p>
                               {item.description && (
-                                <p className="text-xs mt-1 leading-relaxed line-clamp-2" style={{ color: "#6b7280" }}>
+                                <p style={{
+                                  fontSize: "0.8125rem", marginTop: "0.3rem", lineHeight: 1.5,
+                                  color: C.textMuted,
+                                  display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden",
+                                }}>
                                   {item.description}
                                 </p>
                               )}
                               {item.tags.length > 0 && (
-                                <div className="flex flex-wrap gap-1 mt-2">
-                                  {item.tags.map(tag => <TagBadge key={tag} tag={tag} />)}
+                                <div style={{ display: "flex", flexWrap: "wrap", gap: "0.3rem", marginTop: "0.5rem" }}>
+                                  {item.tags.map(tag => {
+                                    const tc = TAG_COLORS[tag] ?? { bg: "#f3f4f6", color: "#6b7280" };
+                                    return (
+                                      <span key={tag} style={{
+                                        fontSize: "0.7rem", fontWeight: 600, padding: "0.2rem 0.5rem",
+                                        borderRadius: "999px", background: tc.bg, color: tc.color,
+                                      }}>
+                                        {tagName(tag, lang)}
+                                      </span>
+                                    );
+                                  })}
                                 </div>
                               )}
                             </div>
-                            {/* Price shown here when no image */}
+                            {/* Price without image */}
                             {!item.imageUrl && item.price != null && (
-                              <p className="text-base font-black flex-shrink-0 ml-2"
-                                style={{
-                                  color: soldOut ? "#3a3f52" : brand,
-                                  textDecoration: soldOut ? "line-through" : "none",
-                                }}>
+                              <p style={{
+                                fontWeight: 800, fontSize: "1rem", flexShrink: 0,
+                                color: soldOut ? C.textDim : brand,
+                                textDecoration: soldOut ? "line-through" : "none",
+                              }}>
                                 {formatPrice(item.price)}
                               </p>
                             )}
                           </div>
-
-                          {/* Sold out label for no-image items */}
-                          {soldOut && !item.imageUrl && (
-                            <div className="mt-2">
-                              <span className="text-xs font-semibold px-2 py-0.5 rounded-md"
-                                style={{ background: "#252830", color: "#6b7280", border: "1px solid #2e3140" }}>
-                                {lang === "en" ? "Sold out" : "Esgotado"}
-                              </span>
-                            </div>
-                          )}
                         </div>
                       </div>
                     );
                   })}
                 </div>
               </section>
-            ))
-          )}
+            ))}
+          </div>
+        )}
 
-          {/* Footer CTA */}
-          {hasPlan && (
-            <div className="pt-4 pb-10 space-y-4">
-              <div className="rounded-2xl overflow-hidden"
-                style={{ background: `linear-gradient(135deg, #1e2028 0%, ${hexAlpha(brand, 0.15)} 100%)`, border: `1px solid ${hexAlpha(brand, 0.25)}` }}>
-                <div className="px-6 py-6 flex flex-col sm:flex-row items-center gap-4">
-                  <div className="flex-1 text-center sm:text-left">
-                    <p className="font-black text-base" style={{ color: "#fafafa" }}>
-                      {lang === "en" ? "Ready to visit?" : "Pronto para visitar?"}
-                    </p>
-                    <p className="text-sm mt-0.5" style={{ color: "#8b92a5" }}>
-                      {lang === "en"
-                        ? "Book your table now and guarantee your spot."
-                        : "Reserve sua mesa agora e garanta seu lugar."}
-                    </p>
-                  </div>
-                  <a href={`/r/${restaurant.slug}`}
-                    className="flex items-center gap-2 px-6 py-3 rounded-xl text-sm font-bold transition-all hover:opacity-90 whitespace-nowrap flex-shrink-0"
-                    style={{ background: brand, color: "#fff", boxShadow: `0 4px 20px ${hexAlpha(brand, 0.45)}` }}>
-                    <CalendarDays size={16} />
-                    {lang === "en" ? "Make a reservation" : "Fazer uma reserva"}
-                  </a>
-                </div>
+        {/* Footer CTA */}
+        {hasPlan && (
+          <div style={{ marginTop: "3rem" }}>
+            <div style={{
+              borderRadius: "1.25rem", overflow: "hidden",
+              background: `linear-gradient(135deg, ${hexAlpha(brand, 0.08)} 0%, ${hexAlpha(brand, 0.18)} 100%)`,
+              border: `1.5px solid ${hexAlpha(brand, 0.25)}`,
+            }}>
+              <div style={{ padding: "1.5rem", display: "flex", flexDirection: "column", alignItems: "center", textAlign: "center", gap: "0.875rem" }}>
+                <p style={{ fontWeight: 800, fontSize: "1.0625rem", color: C.text }}>
+                  {lang === "en" ? "Ready to visit?" : "Pronto para visitar?"}
+                </p>
+                <p style={{ fontSize: "0.875rem", color: C.textMuted, marginTop: "-0.375rem" }}>
+                  {lang === "en"
+                    ? "Book your table now and guarantee your spot."
+                    : "Reserve sua mesa agora e garanta seu lugar."}
+                </p>
+                <a href={`/r/${restaurant.slug}`} style={{
+                  display: "inline-flex", alignItems: "center", gap: "0.5rem",
+                  padding: "0.75rem 1.75rem", borderRadius: "0.875rem",
+                  background: brand, color: "#fff", fontWeight: 700, fontSize: "0.9375rem",
+                  textDecoration: "none", boxShadow: `0 6px 20px ${hexAlpha(brand, 0.4)}`,
+                }}>
+                  <CalendarDays size={16} />
+                  {lang === "en" ? "Make a reservation" : "Fazer uma reserva"}
+                </a>
               </div>
-
-              <p className="text-center text-xs" style={{ color: "#2e3140" }}>
-                Powered by <span style={{ color: "#3a3f52" }}>Réservé</span>
-              </p>
             </div>
-          )}
-        </div>
+
+            <p style={{ textAlign: "center", fontSize: "0.75rem", color: C.textDim, marginTop: "1.5rem" }}>
+              Powered by <span style={{ fontWeight: 700, color: brand, opacity: 0.7 }}>Reserva360</span>
+            </p>
+          </div>
+        )}
       </main>
 
       {/* Back to top */}
       {showBackToTop && (
         <button
           onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
-          className="fixed bottom-6 right-6 w-12 h-12 rounded-2xl flex items-center justify-center shadow-xl transition-all hover:opacity-80 z-20"
-          style={{ background: brand, color: "#fff", boxShadow: `0 8px 24px ${hexAlpha(brand, 0.45)}` }}>
+          style={{
+            position: "fixed", bottom: "1.5rem", right: "1.5rem",
+            width: 48, height: 48, borderRadius: "0.875rem",
+            display: "flex", alignItems: "center", justifyContent: "center",
+            background: brand, color: "#fff", border: "none", cursor: "pointer",
+            boxShadow: `0 8px 24px ${hexAlpha(brand, 0.5)}`, zIndex: 20,
+          }}>
           <ChevronUp size={20} />
         </button>
       )}
